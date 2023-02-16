@@ -1,0 +1,28 @@
+  .devices-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .device {
+    background-color: white;
+    border: 1px solid gray;
+    border-radius: 5px;
+    box-shadow: 2px 2px 5px gray;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 10px;
+    padding: 20px;
+    width: 300px;
+    height: 200px;
+  }
+
+  .device h3 {
+    margin: 0;
+  }
+
+  .device p {
+    margin: 10px 0;
+  }

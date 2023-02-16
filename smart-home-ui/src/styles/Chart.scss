@@ -1,0 +1,35 @@
+#chart {
+    width: 600px;
+    height: 350px;
+    margin-top: 16px;
+}
+
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+}
+
+.dot {
+    fill: steelblue;
+    stroke: steelblue;
+}
+
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+}
+
+.tooltip {
+    position: absolute;
+    background-color: white;
+    border: 1px solid steelblue;
+    padding: 5px 10px;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+#minimap {
+    background-color: #e4e4e4;
+}
