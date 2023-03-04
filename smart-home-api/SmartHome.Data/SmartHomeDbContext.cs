@@ -4,14 +4,14 @@ using SmartHome.Data.Entities;
 
 namespace SmartHome.Data
 {
-    public class Context : DbContext
+    public class SmartHomeDbContext : DbContext
     {
         private readonly string _connectionString = "Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True";
 
-        public Context() => new Context("Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True");
+        public SmartHomeDbContext() => new SmartHomeDbContext("Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True");
 
 
-        public Context(string connectionString) {
+        public SmartHomeDbContext(string connectionString) {
             _connectionString = connectionString;
         }
         //public Context(DbContextOptions<Context> options):base(options) { }
@@ -27,12 +27,12 @@ namespace SmartHome.Data
             optionsBuilder.UseSqlServer(_connectionString);
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Sensor>()
-                .HasOne(s => s.Data)
-                .WithMany()
-                .HasForeignKey(s => s.DataId);
-        }   
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    modelBuilder.Entity<Sensor>()
+        //        .HasOne(s => s.Data)
+        //        .WithMany()
+        //        .HasForeignKey(s => s.DataId);
+        //}   
     }
 }

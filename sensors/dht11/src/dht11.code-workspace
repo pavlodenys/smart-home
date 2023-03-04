@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "D:/repos/personal/SmartHome/sensors/dht11"
+		},
+		{
+			"name": "DHT11",
+			"path": ".."
+		}
+	],
+	"settings": {}
+}

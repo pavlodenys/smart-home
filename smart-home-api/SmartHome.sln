@@ -22,7 +22,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartHome.Api", "SmartHome.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartHome.Core", "SmartHome.Core\SmartHome.Core.csproj", "{2BF1EABE-3948-4572-BDCA-D473F9F0B629}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.Connector", "SmartHome.Connector\SmartHome.Connector.csproj", "{EE9E8225-3A19-4CDB-BB7A-16A1B359FD12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartHome.Connector", "SmartHome.Connector\SmartHome.Connector.csproj", "{EE9E8225-3A19-4CDB-BB7A-16A1B359FD12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.Api.Tests", "SmartHome.Api.Tests\SmartHome.Api.Tests.csproj", "{097D8970-FEE2-4663-9829-8CF4ACC6B416}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{EA2892C1-72D0-49D1-B625-5CFB93304FCF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.Tests", "SmartHome.Tests\SmartHome.Tests.csproj", "{113338E3-04F1-48D9-9F60-2ED1640947BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,9 +56,21 @@ Global
 		{EE9E8225-3A19-4CDB-BB7A-16A1B359FD12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE9E8225-3A19-4CDB-BB7A-16A1B359FD12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE9E8225-3A19-4CDB-BB7A-16A1B359FD12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{097D8970-FEE2-4663-9829-8CF4ACC6B416}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{097D8970-FEE2-4663-9829-8CF4ACC6B416}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{097D8970-FEE2-4663-9829-8CF4ACC6B416}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{097D8970-FEE2-4663-9829-8CF4ACC6B416}.Release|Any CPU.Build.0 = Release|Any CPU
+		{113338E3-04F1-48D9-9F60-2ED1640947BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{113338E3-04F1-48D9-9F60-2ED1640947BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{113338E3-04F1-48D9-9F60-2ED1640947BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{113338E3-04F1-48D9-9F60-2ED1640947BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{097D8970-FEE2-4663-9829-8CF4ACC6B416} = {EA2892C1-72D0-49D1-B625-5CFB93304FCF}
+		{113338E3-04F1-48D9-9F60-2ED1640947BB} = {EA2892C1-72D0-49D1-B625-5CFB93304FCF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {75189A5B-DD96-4977-BE65-17B1DD713B16}

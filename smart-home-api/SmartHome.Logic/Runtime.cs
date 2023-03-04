@@ -9,9 +9,9 @@ namespace SmartHome.Logic
 {
     public static class Runtime
     {
-        public static Context GetContext()
+        public static SmartHomeDbContext GetContext()
         {
-            var dataContext = new Context();
+            var dataContext = new SmartHomeDbContext();
 
             return dataContext;
         }

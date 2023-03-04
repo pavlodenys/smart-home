@@ -16,6 +16,6 @@ export let links = [];
   </ul>
 </nav>
 
-<style>
+<!-- <style>
     @import './TopNav.scss';
-</style>
+</style> -->

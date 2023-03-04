@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 using SmartHome.Logic;
@@ -13,24 +15,41 @@ namespace SmartHome.Api.Controllers
         private IRepository<Device, DeviceDto> _devicesRepo { get; set; }
         private IRepository<Scenario, ScenarioDto> _scenarioRepo { get; set; }
 
+        private readonly ILogger<HomeController> _logger;
+
 
         private IService _service { get; set; }
 
-        public HomeController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, IRepository<Scenario, ScenarioDto> scenarioRepo)
+        public HomeController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, IRepository<Scenario, ScenarioDto> scenarioRepo, ILogger<HomeController> logger)
         {
             _repo = repo;
             _service = service;
             _devicesRepo = devicesRepo;
             _scenarioRepo = scenarioRepo;
+            _logger = logger;
         }
 
         [HttpGet]
         [Route("sensors")]
+        //[Authorize]
         public IActionResult GetSensors()
         {
             var sensors = _repo.GetAll();
+
+            _logger.Log(LogLevel.Information, "Get Sensors Data");
             
             return Ok(sensors);
+        }
+        [HttpGet]
+        [Route("sensors/{id}")]
+        //[Authorize]
+        public IActionResult GetSensorDetails(int id)
+        {
+            var sensor = _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
+
+            _logger.Log(LogLevel.Information, "Get Sensors Data");
+
+            return Ok(sensor);
         }
 
         [HttpPost]
@@ -44,6 +63,7 @@ namespace SmartHome.Api.Controllers
             }
 
             var newSensor = await _repo.Create(sensor);
+
             return Ok(newSensor);
         }
 

@@ -8,11 +8,11 @@ namespace SmartHome.Data.Entities
         public string Name { get; set; }
         public string Description { get; set; }
         public string Type { get; set; }
-       
-        public int DataId { get; set; }
-        [ForeignKey(nameof(DataId))]
-        public virtual Data Data { get; set; }
 
+        //public int DataId { get; set; }
+        //[ForeignKey(nameof(DataId))]
+        //public virtual Data Data { get; set; }
+        public virtual ICollection<Data> Data { get; set; }
         public Sensor() { }
         public Sensor(string name)
         {

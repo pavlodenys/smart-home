@@ -1,7 +1,7 @@
 import {navigate} from 'svelte-routing';
 
-export function redirect(node:  HTMLElement, authenticated: boolean){
+export function redirect(authenticated: boolean){
     if(!authenticated){
-        navigate("/login");
+        navigate("/#/login");
     }
 }

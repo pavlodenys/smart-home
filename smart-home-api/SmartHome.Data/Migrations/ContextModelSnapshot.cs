@@ -10,14 +10,14 @@ using SmartHome.Data;
 
 namespace SmartHome.Data.Migrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(SmartHomeDbContext))]
     partial class ContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.2")
+                .HasAnnotation("ProductVersion", "7.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -38,11 +38,16 @@ namespace SmartHome.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("SensorId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SensorId");
 
                     b.ToTable("Data");
                 });
@@ -179,9 +184,6 @@ namespace SmartHome.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("DataId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -196,9 +198,18 @@ namespace SmartHome.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DataId");
-
                     b.ToTable("Sensors");
+                });
+
+            modelBuilder.Entity("SmartHome.Data.Entities.Data", b =>
+                {
+                    b.HasOne("SmartHome.Data.Entities.Sensor", "Sensor")
+                        .WithMany("Data")
+                        .HasForeignKey("SensorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sensor");
                 });
 
             modelBuilder.Entity("SmartHome.Data.Entities.Point", b =>
@@ -250,17 +261,6 @@ namespace SmartHome.Data.Migrations
                     b.Navigation("Sensor");
                 });
 
-            modelBuilder.Entity("SmartHome.Data.Entities.Sensor", b =>
-                {
-                    b.HasOne("SmartHome.Data.Entities.Data", "Data")
-                        .WithMany()
-                        .HasForeignKey("DataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Data");
-                });
-
             modelBuilder.Entity("SmartHome.Data.Entities.Data", b =>
                 {
                     b.Navigation("Points");
@@ -271,6 +271,11 @@ namespace SmartHome.Data.Migrations
                     b.Navigation("Devices");
 
                     b.Navigation("Sensors");
+                });
+
+            modelBuilder.Entity("SmartHome.Data.Entities.Sensor", b =>
+                {
+                    b.Navigation("Data");
                 });
 #pragma warning restore 612, 618
         }

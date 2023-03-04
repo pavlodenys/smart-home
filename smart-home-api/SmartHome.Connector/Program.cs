@@ -52,7 +52,7 @@ namespace SmatHome.Connector
             _exchangeName = exchangeName;
             _queueName = queueName;
 
-            var factory = new ConnectionFactory() { HostName = "localhost" };
+            var factory = new ConnectionFactory() { HostName = "localhost", UserName = "rmuser", Password = "rmpassword" };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -75,14 +75,22 @@ namespace SmatHome.Connector
                 // process message and save to database
 
                 var point = JsonConvert.DeserializeObject<PointDto>(message);
-                using (var db = new Context())
+
+                var dataId = 1; // TODO: make generic
+
+                if (point != null)
+                {
+                    dataId = point.Id;
+                }
+                using (var db = new SmartHomeDbContext())
                 {
                     var data = new Point
                     {
                         Value = point.Value,
-                        Name = "ppm",
+                        //Name = "C",
+                        Name = point.Name,
                         DateTime = DateTime.Now,
-                        DataId = 1 // TODO: make generic
+                        DataId = dataId
                     };
                     db.Add(data);
                     db.SaveChanges();
@@ -90,11 +98,15 @@ namespace SmatHome.Connector
 
                     foreach (var scenario in allScenarios)
                     {
-                        var result = _service.CheckScenario(scenario.Devices.FirstOrDefault().Device, scenario.Operator, point.Value, scenario.SensorValue);
-
-                        if(result)
+                        var scenarioDevice = scenario.Devices.FirstOrDefault();
+                        if (scenarioDevice != null)
                         {
-                            db.SaveChanges();
+                            var result = _service.CheckScenario(scenarioDevice.Device, scenario.Operator, point.Value, scenario.SensorValue);
+
+                            if (result)
+                            {
+                                db.SaveChanges();
+                            }
                         }
                     }
                 };

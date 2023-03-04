@@ -62,6 +62,7 @@ namespace SmartHome.Data.AutoMapper
     .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
        .ForMember(dto => dto.SensorValue, opt => opt.MapFrom(entity => entity.SensorValue))
        .ForMember(dto => dto.Operator, opt => opt.MapFrom(entity => entity.Operator))
+       .ForMember(dto => dto.Command, opt => opt.MapFrom(entity => entity.Command))
        .ForMember(dto => dto.Sensors, opt => opt.MapFrom(entity => entity.Sensors))
        .ForMember(dto => dto.Devices, opt => opt.MapFrom(entity => entity.Devices));
 
@@ -69,6 +70,7 @@ namespace SmartHome.Data.AutoMapper
 .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
 .ForMember(dto => dto.SensorValue, opt => opt.MapFrom(entity => entity.SensorValue))
 .ForMember(dto => dto.Operator, opt => opt.MapFrom(entity => entity.Operator))
+.ForMember(dto => dto.Command, opt => opt.MapFrom(entity => entity.Command))
 .ForMember(dto => dto.Devices, opt => opt.MapFrom(entity => entity.Devices))
 .ForMember(dto => dto.Sensors, opt => opt.MapFrom(entity => entity.Sensors));
         }

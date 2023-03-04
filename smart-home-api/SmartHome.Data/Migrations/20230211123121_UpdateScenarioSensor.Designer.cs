@@ -11,7 +11,7 @@ using SmartHome.Data;
 
 namespace SmartHome.Data.Migrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(SmartHomeDbContext))]
     [Migration("20230211123121_UpdateScenarioSensor")]
     partial class UpdateScenarioSensor
     {

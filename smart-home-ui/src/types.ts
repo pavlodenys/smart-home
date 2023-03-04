@@ -1,9 +1,9 @@
 export interface SensorData {
-    id: string;
+    //id: string;
     name: string;
     type: string;
     description: string;
-    chartData: ChartData;
+    chartData: ChartData[];
 }
 
 export interface DeviceData{
@@ -13,11 +13,12 @@ export interface DeviceData{
 }
 
 export interface ChartData {
-    id: string;
-    name: string;
-    type: string;
-    labels: string[];
-    data: PointDto[];
+    //id?: string;
+    name?: string;
+    type?: string;
+    description?: string;
+    labels?: string[];
+    data?: PointDto[];
 }
 
 export interface PointDto {

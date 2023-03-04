@@ -1,10 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { push } from "svelte-spa-router";
   import Sensor from "./components/Sensor.svelte";
   import type { SensorData } from "./types";
   //import { get } from 'svelte/fetch';
 
   export let sensors: SensorData[];
+
+  const createNew = () => {
+    push("/sensor");
+  }
 </script>
 
 <!-- <h2>Sensors</h2>
@@ -40,21 +45,6 @@
       {/each}
     </ul>
   {/if}
+  <button on:click={createNew}>+</button>
 </div>
 
-<style>
-  /* table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th, td {
-    border: 1px solid #dddddd;
-    padding: 8px;
-    text-align: left;
-  }
-
-  tr:nth-child(even) {
-    background-color: #dddddd;
-  } */
-</style>

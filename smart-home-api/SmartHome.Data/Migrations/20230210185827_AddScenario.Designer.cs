@@ -11,7 +11,7 @@ using SmartHome.Data;
 
 namespace SmartHome.Data.Migrations
 {
-    [DbContext(typeof(Context))]
+    [DbContext(typeof(SmartHomeDbContext))]
     [Migration("20230210185827_AddScenario")]
     partial class AddScenario
     {

@@ -7,6 +7,10 @@ using SmartHome.Data.Entities;
 using SmartHome.Data.DTO;
 using Newtonsoft;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace SmartHome.Api
 {
@@ -25,13 +29,50 @@ namespace SmartHome.Api
             // var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            services.AddDbContext<Context>(options => options
+            services.AddDbContext<SmartHomeDbContext>(options => options
                     .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddSingleton<Context>();
+            services.AddSingleton<SmartHomeDbContext>();
             services.AddSingleton(typeof(IRepository<Sensor, SensorDto>), typeof(Repository<Sensor, SensorDto>));
             services.AddSingleton(typeof(IRepository<Device, DeviceDto>), typeof(Repository<Device, DeviceDto>));
             services.AddSingleton(typeof(IRepository<Scenario, ScenarioDto>), typeof(Repository<Scenario, ScenarioDto>));
             services.AddAutoMapper(typeof(SensorProfile));
+
+            var tokenValidatorParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = Configuration["Jwt:Issuer"],
+                ValidAudience = Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+            };
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = tokenValidatorParameters;
+                    //options.Events = new JwtBearerEvents
+                    //{
+                    //    OnChallenge = context =>
+                    //    {
+                    //       // context.Response.Headers["WWW-Authenticate"] = "Bearer";
+                    //        if (context.Request.Headers["Authorization"].Count == 0)
+                    //        {
+                    //            context.Response.StatusCode = 401;
+                    //        }
+                    //        else
+                    //        {
+                    //            context.Response.StatusCode = 403;
+                    //        }
+                    //        return Task.CompletedTask;
+                    //    }
+                    //};
+                });
 
             services.AddSingleton<IService, Services>();
 
@@ -54,7 +95,7 @@ namespace SmartHome.Api
 
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
-                var context = serviceScope.ServiceProvider.GetRequiredService<Context>();
+                var context = serviceScope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
 
                 if (context.Database.EnsureCreated())
                 {
@@ -70,6 +111,7 @@ namespace SmartHome.Api
             app.UseHttpsRedirection();
 
             app.UseRouting();
+            app.UseAuthentication();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
             {
