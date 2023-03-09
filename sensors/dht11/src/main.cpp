@@ -19,10 +19,12 @@ struct Point
   float Value;
 };
 
-const char *ssid = "Nexty"; // Enter SSID here
+//const char *ssid = "Nexty"; // Enter SSID here
+const char *ssid = "Potter"; // Enter SSID here
 const char *password = "04041992";
 
-const char *broker = "192.168.0.151";
+//const char *broker = "192.168.0.151";
+const char *broker = "192.168.3.21";
 const int port = 1883;
 
 const char *user = "rmuser";
@@ -81,7 +83,7 @@ void loop()
   }
   else
   {
-    delay(5000);
+    delay(20000);
     float h = dht.readHumidity();
     float t = dht.readTemperature();
 
@@ -104,6 +106,8 @@ void loop()
     StaticJsonDocument<128> docH;
     docT["Id"] = temperature.Id;
     docH["Id"] = humidity.Id;
+    docH["Name"] = "%";
+    docT["Name"] = "C";
     docT["Value"] = temperature.Value;
     docH["Value"] = humidity.Value;
     char jsonT[128];

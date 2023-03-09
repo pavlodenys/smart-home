@@ -87,7 +87,7 @@ namespace SmatHome.Connector
                     var data = new Point
                     {
                         Value = point.Value,
-                        //Name = "C",
+                       // Name = "C",
                         Name = point.Name,
                         DateTime = DateTime.Now,
                         DataId = dataId

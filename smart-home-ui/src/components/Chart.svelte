@@ -49,21 +49,19 @@
   };
 
   const createValueLine = (x, y) => {
-    const valueline = d3
+    return d3
       .line<PointDto>()
       .x((d) => x(new Date(formatDate(d.dateTime))))
       .y((d) => y(d.value));
-    return valueline;
   };
 
   const createPath = (svg, points, valueline, margin) => {
-    const path = svg
+    return svg
       .append("path")
       .data([points])
       .attr("transform", `translate(${margin.left}, 0)`)
       .attr("class", "line")
       .attr("d", valueline);
-    return path;
   };
 
   const createTracker = (svg, width, height, translateX) => {
@@ -79,16 +77,16 @@
   };
 
   const createCircle = (svg, points, margin, x, y) => {
-    const circle = svg
-      .selectAll(".dot")
+    return svg
+      .selectAll(`.dot-${chartId}`)
       .data(points)
       .enter()
       .append("circle")
       .attr("transform", `translate(${margin.left}, 0)`)
-      .attr("class", "dot")
+      .attr("class", `dot-${chartId}`)
       .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
       .attr("cy", (d) => y(d.value))
-      .attr("r", 5)
+      .attr("r", 2)
       .on("mouseover", (d, e) => {
         const xPosition = d.pageX;
         const yPosition = d.pageY;
@@ -112,8 +110,6 @@
       .on("mouseout", (d, e) => {
         d3.select(`#tooltip-${e.id}`).remove();
       });
-
-    return circle;
   };
 
   const itemsInRange = (d, xValue, inverted, x) => {
@@ -230,7 +226,7 @@
     const path = svg.select(".line").attr("d", valueline);
     const totalLength = path.node().getTotalLength();
     svg
-      .selectAll(".dot")
+      .selectAll(`.dot-${chartId}`)
       .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
       .attr("cy", (d) => y(d.value));
   };
@@ -242,51 +238,105 @@
     });
   };
 
-  const updateDataChart = (pointsData, x, y, xAxis, yAxis, svg) => {
-    if (!pointsData || !pointsData.length) {
+  const updateDataChart = (data, x, y, xAxis, yAxis, svg, margin) => {
+    if (!data || !data.length) {
       return;
     }
-    const yMin = d3.min(pointsData, (d: any) => d.value);
-    const yMax = d3.max(pointsData, (d: any) => d.value);
-
-    const firstPoint =
-      pointsData && pointsData.length ? pointsData[2].dateTime : new Date();
 
     const xDomain = [
-      new Date(formatDate(firstPoint)),
-      d3.max(pointsData, (d: any) => new Date(formatDate(d.dateTime))),
+      new Date(formatDate(data[0].dateTime)),
+      d3.max(data, (d: any) => new Date(formatDate(d.dateTime))),
     ];
-    const yDomain = [scaleParamMin * yMin, scaleParam * yMax];
-
-    const xDomainMap = d3.extent(
-      pointsData,
-      (d: any) => new Date(formatDate(d.dateTime))
-    );
-    const yDomainMap = [
-      d3.min(pointsData, (d: any) => d.value),
-      d3.max(pointsData, (d: any) => d.value),
+    const yDomain = [
+      d3.min(data, (d) => d.value) * 0.95,
+      d3.max(data, (d) => d.value) * 1.05,
     ];
+    x.domain(xDomain);
+    y.domain(yDomain);
 
-    updateScales(xDomain, yDomain, x, y, xAxis, yAxis);
+    // Update the x and y axes with the new domains
+ 
+   xAxis.transition().duration(1000).call(d3.axisBottom(x))
+    yAxis.call(d3.axisLeft(y));
+
+    // Select the line and bind the new data to it
 
     const line = svg.select(".line");
-    line.data([pointsData]).attr(
-      "d",
-      d3
-        .line()
-        .x((d: any) => x(new Date(d.dateTime)))
-        .y((d: any) => y(d.value))
-    );
+    if (line.size()) {
+      line.datum(data);
+    } else {
+      const valueLine = createValueLine(x, y);
+      const path = createPath(svg, data, valueLine, margin);
+    }
 
-    const circles = svg.selectAll(".circle").data(pointsData, (d) => d.id);
-    circles
-      .enter()
-      .append("circle")
-      .attr("class", "circle")
-      .attr("cx", (d) => x(new Date(d.dateTime)))
-      .attr("cy", (d) => y(d.value))
-      .attr("r", 4);
-    circles.exit().remove();
+    // Redraw the line with the new data and scales
+    line
+      .transition()
+      .duration(1000)
+      .attr(
+        "d",
+        d3
+          .line()
+          .x((d) => x(new Date(formatDate(d.dateTime))))
+          .y((d) => y(d.value))
+      );
+
+    // Select the circles and bind the new data to them
+    let circles = svg.selectAll(`.dot-${chartId}`);
+    if (circles.size()) {
+      circles.data(data);
+          circles
+      .transition()
+      .duration(1000)
+      .attr("cx", (d) => x(new Date(formatDate(d.date))))
+      .attr("cy", (d) => y(d.value));
+    } else {
+      circles = createCircle(svg, data, margin, x, y);
+    }
+
+    // Move the circles to their new positions
+
+    // const yMin = d3.min(pointsData, (d: any) => d.value);
+    // const yMax = d3.max(pointsData, (d: any) => d.value);
+
+    // const firstPoint =
+    //   pointsData && pointsData.length ? pointsData[2].dateTime : new Date();
+
+    // const xDomain = [
+    //   new Date(formatDate(firstPoint)),
+    //   d3.max(pointsData, (d: any) => new Date(formatDate(d.dateTime))),
+    // ];
+    // const yDomain = [scaleParamMin * yMin, scaleParam * yMax];
+
+    // const xDomainMap = d3.extent(
+    //   pointsData,
+    //   (d: any) => new Date(formatDate(d.dateTime))
+    // );
+    // const yDomainMap = [
+    //   d3.min(pointsData, (d: any) => d.value),
+    //   d3.max(pointsData, (d: any) => d.value),
+    // ];
+
+    // updateScales(xDomain, yDomain, x, y, xAxis, yAxis);
+
+    // const line = svg.select(".line");
+    // line.data([pointsData]).attr(
+    //   "d",
+    //   d3
+    //     .line()
+    //     .x((d: any) => x(new Date(d.dateTime)))
+    //     .y((d: any) => y(d.value))
+    // );
+
+    // const circles = svg.selectAll(".circle").data(pointsData, (d) => d.id);
+    // circles
+    //   .enter()
+    //   .append("circle")
+    //   .attr("class", "circle")
+    //   .attr("cx", (d) => x(new Date(d.dateTime)))
+    //   .attr("cy", (d) => y(d.value))
+    //   .attr("r", 4);
+    // circles.exit().remove();
   };
 
   onMount(() => {
@@ -358,7 +408,14 @@
       svgMinimapHeigth,
       margin
     );
-
+  const xAxisSvg =  svg
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${height})`)
+      .call(xAxis);
+     const yAxisSvg =      svg
+      .append("g")
+      .attr("transform", `translate(${margin.left}, 0)`)
+      .call(yAxis);
     datePicker.on("change", (e) => {
       const newDate = datePicker.node().value;
       selectedDate = newDate;
@@ -366,11 +423,11 @@
 
       if (!filteredPoints || !filteredPoints.length) {
         d3.select(".line").remove();
-        d3.selectAll(".circle").remove();
+        d3.selectAll(`.dot-${chartId}`).remove();
         return;
       }
-
-      updateDataChart(filteredPoints, x, y, xAxis, yAxis, svg);
+      console.log(xAxis);
+      updateDataChart(filteredPoints, x, y, xAxisSvg, yAxisSvg, svg, margin);
     });
 
     const valueLine = createValueLine(x, y);
@@ -405,15 +462,9 @@
 
     svg.call(zoom);
 
-    svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, ${height})`)
-      .call(xAxis);
 
-    svg
-      .append("g")
-      .attr("transform", `translate(${margin.left}, 0)`)
-      .call(yAxis);
+
+ 
 
     svg.on("mousedown", (event) => {
       console.log(event);
@@ -430,16 +481,16 @@
       svg.call(zoom.transform, zoomTransform);
     });
 
-    d3.select(window).on("keydown", (event) => {
-      if (event.key === "ArrowLeft") {
-        // Shift chart data to the left
-        x.domain(x.domain().map((d) => new Date(d.getTime() - 1000)));
-      } else if (event.key === "ArrowRight") {
-        x.domain(x.domain().map((d) => new Date(d.getTime() + 1000)));
-      }
+    // d3.select(window).on("keydown", (event) => {
+    //   if (event.key === "ArrowLeft") {
+    //     // Shift chart data to the left
+    //     x.domain(x.domain().map((d) => new Date(d.getTime() - 1000)));
+    //   } else if (event.key === "ArrowRight") {
+    //     x.domain(x.domain().map((d) => new Date(d.getTime() + 1000)));
+    //   }
 
-      updateChart(svg, xAxis, valueLine, x, y);
-    });
+    //   updateChart(svg, xAxis, valueLine, x, y);
+    // });
   });
 
   const crateZoom = (width, height, xScale, yScale) => {
