@@ -1,7 +1,7 @@
 <script lang="ts">
   import {link} from 'svelte-spa-router';
-  import type { SensorData } from "../types";
-  import Chart from "./Chart.svelte";
+  import type { SensorData } from "../../types";
+  import Chart from "../chart/Chart.svelte";
 
   export let sensor: SensorData;
   const deleteSensor = () => {
@@ -10,7 +10,7 @@
 </script>
 
 <style>
-    @import "../styles/Sensor.scss";
+    @import "./Sensor.scss";
 </style>
 
 <div class="sensor-card">

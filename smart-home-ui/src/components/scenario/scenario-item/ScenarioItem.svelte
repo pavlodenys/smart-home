@@ -15,12 +15,12 @@
     padding: 1rem;
   }
 
-  .scenario-item img {
+  /* .scenario-item img {
     width: 100%;
     max-width: 400px;
     margin: 0 auto;
     display: block;
-  }
+  } */
 
   .scenario-item h2 {
     margin: 1rem 0;

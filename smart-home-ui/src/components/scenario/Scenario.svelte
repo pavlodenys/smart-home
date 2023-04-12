@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Sensors from "../../Sensors.svelte";
+  import Sensors from "../sensors/Sensors.svelte";
   import {
     ComparisonOperator,
     type DeviceData,
@@ -8,6 +8,7 @@
   } from "../../types";
   import Modal from "../modal/Modal.svelte";
   import ScenarioItem from './scenario-item/ScenarioItem.svelte';
+  import { httpFetch } from "../../api/httpServise";
   let showModal = false;
   let selectedSensor;
   let selectedDevice;
@@ -47,8 +48,9 @@
   };
 
   onMount(async () => {
-   // const scenarios = await fetch()
+    const scenarios = await httpFetch.get(`api/scenario`);
 
+    console.log(scenarios);
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {

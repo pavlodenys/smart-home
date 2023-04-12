@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { push } from "svelte-spa-router";
-  import Sensor from "./components/Sensor.svelte";
-  import type { SensorData } from "./types";
+  import Sensor from "../sensor/Sensor.svelte";
+  import type { SensorData } from "../../types";
   //import { get } from 'svelte/fetch';
 
   export let sensors: SensorData[];
@@ -36,7 +36,7 @@
 <div>
   <h1>Sensors</h1>
 
-  {#if sensors.length === 0}
+  {#if (!sensors || sensors.length === 0)}
     <p>No sensors found</p>
   {:else}
     <ul>

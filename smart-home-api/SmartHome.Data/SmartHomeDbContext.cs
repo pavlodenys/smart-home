@@ -21,6 +21,8 @@ namespace SmartHome.Data
         public DbSet<Scenario> Scenarios { get; set; }
         public DbSet<ScenarioDevice> ScenarioDevices { get; set; }
         public DbSet<ScenarioSensor> ScenarioSensors { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<HomeUser> HomeUsers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

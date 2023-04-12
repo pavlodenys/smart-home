@@ -1,16 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Chart from "../Chart.svelte";
+  import Chart from "../chart/Chart.svelte";
   import { httpFetch } from "../../api/httpServise";
   import { location } from "svelte-spa-router";
   import type { ChartData, SensorData } from "../../types";
 
   const getInitialChartData = () => {
     return {
-     // id: "",
+      // id: "",
       name: "",
       type: "",
-      description: ""
+      description: "",
     };
   };
 
@@ -23,6 +23,8 @@
   };
   let showNewData = false;
   let newChartData = getInitialChartData();
+  let page = 0;
+  let count = 50;
   export let params = null;
 
   onMount(async () => {
@@ -39,15 +41,32 @@
     }
   });
 
+  const updateChartData = async (e) => {
+    const result = await httpFetch.get(
+      `api/home/sensors/${e.detail.dataId}/data/${e.detail.page}/${count}`
+    );
+
+    let chartData = sensor.chartData.find((x) => x.id === e.detail.dataId);
+
+    chartData.data = result;
+  };
+
   const connectToData = () => {
     showNewData = true;
     newChartData = getInitialChartData();
   };
 
   const saveSensor = async () => {
-    const result = await httpFetch.post(`api/home/sensors`, sensor);
-
-    console.log(result);
+    if (sensor.id) {
+      const result = await httpFetch.put(
+        `api/home/sensor/${sensor.id}`,
+        sensor
+      );
+      console.log(result);
+    } else {
+      const result = await httpFetch.post(`api/home/sensors`, sensor);
+      console.log(result);
+    }
   };
 
   const cancelConnect = () => {
@@ -72,7 +91,7 @@
 
 <div class="sensor-info">
   <label for="description-input">Description:</label>
-  <textarea id="description-input" bind:value={sensor.description} ></textarea>
+  <textarea id="description-input" bind:value={sensor.description} />
 </div>
 
 <div class="sensor-info">
@@ -85,7 +104,7 @@
 
 {#if sensor?.chartData}
   {#each sensor.chartData as data, index}
-    <Chart chart={data} chartId={index} />
+    <Chart chart={data} chartId={index} on:chartEvent={updateChartData} />
   {/each}
 {:else}
   No data available
@@ -98,10 +117,10 @@
       <input type="text" bind:value={newChartData.name} />
     </label>
 
-     <label>
+    <label>
       Description:
-      <textarea bind:value={newChartData.description} ></textarea>
-    </label> 
+      <textarea bind:value={newChartData.description} />
+    </label>
 
     <label>
       Type:
@@ -120,6 +139,102 @@
 
 <style>
   .sensor-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .sensor-title label {
+    margin-right: 1rem;
+    font-weight: bold;
+  }
+
+  .sensor-title input[type="text"] {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid #ccc;
+  }
+
+  .sensor-info {
+    margin-bottom: 1rem;
+  }
+
+  .sensor-info label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .sensor-info textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid #ccc;
+  }
+
+  .sensor-info input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid #ccc;
+  }
+
+  button {
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+
+  button:hover {
+    background-color: #3e8e41;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+
+  form label {
+    margin-bottom: 0.5rem;
+  }
+
+  form input[type="text"],
+  form textarea,
+  form select {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 2px solid #ccc;
+    margin-bottom: 1rem;
+  }
+
+  form button[type="submit"] {
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+  }
+
+  form button[type="submit"]:hover {
+    background-color: #3e8e41;
+  }
+
+  form button[type="button"] {
+    background-color: #f44336;
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+  }
+
+  /* .sensor-title {
     font-size: 1.5rem;
     font-weight: bold;
   }
@@ -136,5 +251,5 @@
     font-size: 1rem;
     border: 1px solid gray;
     border-radius: 0.25rem;
-  }
+  } */
 </style>

@@ -16,10 +16,11 @@ namespace SmartHome.Logic
     }
     public interface IRepository<TEntity,TDto> : IRepository where TEntity : class
     {
-        IQueryable<TDto> GetAll();
+        Task<IQueryable<TDto>> GetAll();
+        IQueryable<TDto> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0);
         TDto GetDtoById(int id);
         TEntity GetById(int id);
-        TDto GetById(Expression<Func<TEntity, bool>> condition, Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>> include = null);
+        Task<TDto> GetById(Expression<Func<TEntity, bool>> condition, Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>? include = null);
         TDto GetMapById(int id); // Rename to GetById
         Task<TDto> Create(TDto entity);
         TEntity Update(TEntity entity);
@@ -55,7 +56,7 @@ namespace SmartHome.Logic
             return _mapper.Map<TDto>(item);
         }
 
-        public TDto GetById(Expression<Func<TEntity, bool>> condition, Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>> include = null)
+        public async Task<TDto> GetById(Expression<Func<TEntity, bool>> condition,  Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>? include = null)
         {
             var query = _dbContext.Set<TEntity>().AsQueryable();
 
@@ -63,7 +64,9 @@ namespace SmartHome.Logic
             {
                 query = include(query);
             };
-            TEntity? source = query.Where(condition).FirstOrDefault();
+            TEntity? source = await query
+                .Where(condition)
+                .FirstOrDefaultAsync();
             return _mapper.Map<TDto>(source);
         }
 
@@ -98,9 +101,18 @@ namespace SmartHome.Logic
             return rowsDeleted;
         }
 
-       public IQueryable<TDto> GetAll()
+       public async Task<IQueryable<TDto>> GetAll()
         {
             return _set.ProjectTo<TDto>(_mapper.ConfigurationProvider);
+        }
+
+        public IQueryable<TDto> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0)
+        {
+            if (page > 0 && count != 0)
+            {
+                return _set.Where(condition).Skip(page * count).Take(count).ProjectTo<TDto>(_mapper.ConfigurationProvider);
+            }
+            return _set.Where(condition).ProjectTo<TDto>(_mapper.ConfigurationProvider);
         }
 
         public TEntity? Update(int id, TDto dto)

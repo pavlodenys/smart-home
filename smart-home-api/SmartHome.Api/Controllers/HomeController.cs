@@ -4,37 +4,43 @@ using Microsoft.EntityFrameworkCore;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 using SmartHome.Logic;
+using System.Security.Claims;
 
 namespace SmartHome.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class HomeController : ControllerBase
     {
         private IRepository<Sensor, SensorDto> _repo { get; set; }
+        private IRepository<SmartHome.Data.Entities.Data, ChartDataDto> _dataRepo { get; set; }
+        private IRepository<Point, PointDto> _pointsRepo { get; set; }
         private IRepository<Device, DeviceDto> _devicesRepo { get; set; }
-        private IRepository<Scenario, ScenarioDto> _scenarioRepo { get; set; }
+
 
         private readonly ILogger<HomeController> _logger;
 
 
         private IService _service { get; set; }
 
-        public HomeController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, IRepository<Scenario, ScenarioDto> scenarioRepo, ILogger<HomeController> logger)
+        public HomeController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, ILogger<HomeController> logger, IRepository<Point, PointDto> pointsRepo)
         {
             _repo = repo;
             _service = service;
             _devicesRepo = devicesRepo;
-            _scenarioRepo = scenarioRepo;
             _logger = logger;
+            _pointsRepo = pointsRepo;
         }
 
         [HttpGet]
         [Route("sensors")]
         //[Authorize]
-        public IActionResult GetSensors()
+        public async Task<IActionResult> GetSensors()
         {
-            var sensors = _repo.GetAll();
+            var user = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
+
+            var sensors = await _repo.GetAll();
 
             _logger.Log(LogLevel.Information, "Get Sensors Data");
             
@@ -43,13 +49,25 @@ namespace SmartHome.Api.Controllers
         [HttpGet]
         [Route("sensors/{id}")]
         //[Authorize]
-        public IActionResult GetSensorDetails(int id)
+        public async Task<IActionResult> GetSensorDetails(int id)
         {
-            var sensor = _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
+            var sensor = await _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
+
+            _logger.Log(LogLevel.Information, "Get Sensors Details");
+
+            return Ok(sensor);
+        }
+
+        [HttpGet]
+        [Route("sensors/{id}/data/{page}/{count}")]
+        //[Authorize]
+        public async Task<IActionResult> GetSensorData(int id, int page, int count)
+        {
+            var sensorData = _pointsRepo.GetAll(b => b.DataId == id, page, count);
 
             _logger.Log(LogLevel.Information, "Get Sensors Data");
 
-            return Ok(sensor);
+            return Ok(sensorData);
         }
 
         [HttpPost]
@@ -96,9 +114,9 @@ namespace SmartHome.Api.Controllers
 
         [HttpGet]
         [Route("device")]
-        public IActionResult GetAllDevices()
+        public async Task<IActionResult> GetAllDevices()
         {
-            var devices = _devicesRepo.GetAll();
+            var devices = await _devicesRepo.GetAll();
 
             return Ok(devices);
         }
@@ -110,15 +128,6 @@ namespace SmartHome.Api.Controllers
             var changeResult = _service.ChangeStatus(id);
 
             return Ok(changeResult);
-        }
-
-        [HttpPost]
-        [Route("scenario")]
-        public async Task<IActionResult> SaveScenario([FromBody]ScenarioDto dto)
-        {
-            var saveResult = await _scenarioRepo.Create(dto);
-
-            return Ok(saveResult);
         }
     }
 }

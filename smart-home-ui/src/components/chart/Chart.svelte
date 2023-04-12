@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import type { ChartData, PointDto } from "../types";
+  import { onMount, createEventDispatcher } from "svelte";
+  import type { ChartData, PointDto } from "../../types";
   import * as d3 from "d3";
   import moment from "moment";
 
@@ -10,6 +10,7 @@
   export let chartId;
 
   let selectedDate = moment().format("YYYY-MM-DD");
+  const dispatch = createEventDispatcher();
 
   const scaleParamMin = 0.97;
   const scaleParam = 1.03;
@@ -86,7 +87,7 @@
       .attr("class", `dot-${chartId}`)
       .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
       .attr("cy", (d) => y(d.value))
-      .attr("r", 2)
+      .attr("r", 5)
       .on("mouseover", (d, e) => {
         const xPosition = d.pageX;
         const yPosition = d.pageY;
@@ -133,7 +134,8 @@
     minimapXScale,
     trackerWidth,
     x,
-    y
+    y,
+    xAxis
   ) => {
     const drag = d3
       .drag()
@@ -143,6 +145,7 @@
       .on("drag", function (d) {
         cancelAnimationFrame(timeoutId);
         timeoutId = requestAnimationFrame(() => {
+          let updatedXDomain;
           let xPos = d.x;
           let minimapElementWidth = width + margin.right + 20;
           let xValue = minimapXScale.invert(xPos);
@@ -158,12 +161,20 @@
           //tracker.attr("x", clampedXPos);
           tracker.attr("transform", `translate(${clampedXPos}, 0)`);
           if (d.dx === 1) {
-            x.domain(x.domain().map((d) => new Date(d.getTime() + 1000)));
-            y.domain();
+            updatedXDomain = x.domain(
+              x.domain().map((d) => new Date(d.getTime() + 5000))
+            );
+            // y.domain();
           } else if (d.dx === -1) {
-            x.domain(x.domain().map((d) => new Date(d.getTime() - 1000)));
+            updatedXDomain = x.domain(
+              x.domain().map((d) => new Date(d.getTime() - 5000))
+            );
             //y.domain(d3.extent(y.ticks));
           }
+          //const xAxisGroup = xAxis.select(".x-axis");
+          const updatedXAxis = d3.axisBottom(updatedXDomain);
+          // .tickFormat(d3.timeFormat("%d %b"));
+          xAxis.call(updatedXAxis);
 
           // let xData = d3.line<PointDto>().x((point) => {
           //   return itemsInRange(
@@ -212,7 +223,9 @@
             });
         });
       })
-      .on("end", function () {
+      .on("end", (e) => {
+        console.log(e);
+        dispatch("chartEvent", { dataId: chart.id, page: 1 });
         tracker.style("cursor", "grab");
       });
 
@@ -238,35 +251,59 @@
     });
   };
 
-  const updateDataChart = (data, x, y, xAxis, yAxis, svg, margin) => {
+  const updateDataChart = (
+    data,
+    x,
+    y,
+    xAxis,
+    yAxis,
+    svg,
+    margin,
+    svgMap,
+    minimapLine,
+    minix,
+    miniy
+  ) => {
     if (!data || !data.length) {
       return;
     }
-
+    const firtPoint = getFirstPoint(data);
     const xDomain = [
-      new Date(formatDate(data[0].dateTime)),
+      firtPoint,
       d3.max(data, (d: any) => new Date(formatDate(d.dateTime))),
     ];
     const yDomain = [
-      d3.min(data, (d) => d.value) * 0.95,
-      d3.max(data, (d) => d.value) * 1.05,
+      d3.min(data, (d: PointDto) => d.value) * 0.95,
+      d3.max(data, (d: PointDto) => d.value) * 1.05,
     ];
     x.domain(xDomain);
     y.domain(yDomain);
 
+    const xminiDomain = [
+      d3.min(data, (d: any) => new Date(formatDate(d.dateTime))),
+      d3.max(data, (d: any) => new Date(formatDate(d.dateTime))),
+    ];
+    minix.domain(xminiDomain);
+    miniy.domain(yDomain);
+
     // Update the x and y axes with the new domains
- 
-   xAxis.transition().duration(1000).call(d3.axisBottom(x))
+
+    xAxis.transition().duration(1000).call(d3.axisBottom(x));
     yAxis.call(d3.axisLeft(y));
 
     // Select the line and bind the new data to it
 
     const line = svg.select(".line");
+    const miniline = svgMap.select(".line");
+
+    console.log(miniline);
     if (line.size()) {
       line.datum(data);
+      miniline.data([data]);
     } else {
       const valueLine = createValueLine(x, y);
       const path = createPath(svg, data, valueLine, margin);
+      const minMapPath = createPath(svgMap, data, minimapLine, margin);
     }
 
     // Redraw the line with the new data and scales
@@ -277,19 +314,30 @@
         "d",
         d3
           .line()
-          .x((d) => x(new Date(formatDate(d.dateTime))))
-          .y((d) => y(d.value))
+          .x((d: any) => x(new Date(formatDate(d.dateTime))))
+          .y((d: any) => y(d.value))
+      );
+    console.log(minix(new Date(formatDate(data[0].dateTime))));
+    miniline
+      .transition()
+      .duration(1000)
+      .attr(
+        "d",
+        d3
+          .line()
+          .x((d: any) => minix(new Date(formatDate(d.dateTime))))
+          .y((d: any) => miniy(d.value))
       );
 
     // Select the circles and bind the new data to them
     let circles = svg.selectAll(`.dot-${chartId}`);
     if (circles.size()) {
       circles.data(data);
-          circles
-      .transition()
-      .duration(1000)
-      .attr("cx", (d) => x(new Date(formatDate(d.date))))
-      .attr("cy", (d) => y(d.value));
+      circles
+        .transition()
+        .duration(1000)
+        .attr("cx", (d) => x(new Date(formatDate(d.date))))
+        .attr("cy", (d) => y(d.value));
     } else {
       circles = createCircle(svg, data, margin, x, y);
     }
@@ -363,10 +411,9 @@
     const minimapHeight = 50;
     const minimapWidth = width;
 
-    const yMin = d3.min(points, (d: any) => d.value);
-    const yMax = d3.max(points, (d: any) => d.value);
-    const firstPoint =
-      points && points.length ? points[2].dateTime : new Date();
+    const yMin: any = d3.min(points, (d: any) => d.value);
+    const yMax: any = d3.max(points, (d: any) => d.value);
+    const firstPoint = getFirstPoint(points);
 
     const xDomain = [
       new Date(formatDate(firstPoint)),
@@ -401,6 +448,14 @@
 
     const svgMinimapHeigth = minimapHeight + margin.top + margin.bottom + 10;
 
+    const brush = d3
+      .brush()
+      .extent([
+        [0, 0],
+        [width, height],
+      ])
+      .on("end", brushed);
+
     const svg = createSVG(`#chart-${chartId}`, svgWidth, svgHeigth, margin);
     const svgMinimap = createSVG(
       `#minimap-${chartId}`,
@@ -408,14 +463,17 @@
       svgMinimapHeigth,
       margin
     );
-  const xAxisSvg =  svg
+    const xAxisSvg = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, ${height})`)
       .call(xAxis);
-     const yAxisSvg =      svg
+    const yAxisSvg = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, 0)`)
       .call(yAxis);
+
+    const gBrush = svg.append("g").attr("class", "brush").call(brush);
+
     datePicker.on("change", (e) => {
       const newDate = datePicker.node().value;
       selectedDate = newDate;
@@ -427,13 +485,25 @@
         return;
       }
       console.log(xAxis);
-      updateDataChart(filteredPoints, x, y, xAxisSvg, yAxisSvg, svg, margin);
+      updateDataChart(
+        filteredPoints,
+        x,
+        y,
+        xAxisSvg,
+        yAxisSvg,
+        svg,
+        margin,
+        svgMinimap,
+        minimapLine,
+        minimapXScale,
+        minimapYScale
+      );
     });
 
     const valueLine = createValueLine(x, y);
     const minimapLine = createValueLine(minimapXScale, minimapYScale);
     const path = createPath(svg, points, valueLine, margin);
-    createPath(svgMinimap, points, minimapLine, margin);
+    const miniMapPath = createPath(svgMinimap, points, minimapLine, margin);
 
     const tracker = createTracker(
       svgMinimap,
@@ -442,18 +512,19 @@
       svgWidth
     );
 
-    const circle = createCircle(svg, points, margin, x, y);
+    const circle1 = createCircle(svg, points, margin, x, y);
 
     const drag = createDragger(
       tracker,
       path,
-      circle,
+      circle1,
       width,
       margin,
       minimapXScale,
       trackerWidth,
       x,
-      y
+      y,
+      xAxisSvg
     );
 
     tracker.call(drag);
@@ -461,10 +532,6 @@
     const zoom = crateZoom(width, height, x, y);
 
     svg.call(zoom);
-
-
-
- 
 
     svg.on("mousedown", (event) => {
       console.log(event);
@@ -480,6 +547,32 @@
         .translate(-mouseX, 0);
       svg.call(zoom.transform, zoomTransform);
     });
+
+    function brushed(event) {
+      if (!event.sourceEvent) return; // Only transition after input.
+      if (!event.selection) return; // Ignore empty selections.
+
+      const [x0, x1] = event.selection;
+      const newXDomain = [x.invert(x0), x.invert(x1)];
+
+      let extent = event.selection; // looks like [ [12,11], [132,178]]
+let circles = svg
+      .selectAll(`.dot-${chartId}`);
+      // Is the circle in the selection?
+      let isBrushed =
+        extent[0][0] <= circles.attr("cx") &&
+        extent[1][0] >= circles.attr("cx") && // Check X coordinate
+        extent[0][1] <= circles.attr("cy") &&
+        extent[1][1] >= circles.attr("cy"); // And Y coordinate
+      if (isBrushed) {
+        circles.transition().duration(200).style("fill", "green");
+      } else {
+        circles.transition().duration(200).style("fill", "pink");
+      }
+
+      // Call an API to load data for the new domain.
+      console.log(newXDomain);
+    }
 
     // d3.select(window).on("keydown", (event) => {
     //   if (event.key === "ArrowLeft") {
@@ -504,10 +597,24 @@
       .on("zoom", (event) => {
         const transform1 = event.transform;
 
-        console.log(transform1);
+        //console.log(transform1);
         xScale.domain(transform1.rescaleX(xScale).domain());
         yScale.domain(transform1.rescaleY(yScale).domain());
       });
+  };
+
+  const getFirstPoint = (points: any) => {
+    if (points && points.length) {
+      if (points.length > 30) {
+        return new Date(
+          new Date(points[points.length - 1].dateTime).getTime() -
+            20 * 60 * 1000
+        );
+      }
+      return points[0].dateTime;
+    } else {
+      return new Date();
+    }
   };
 </script>
 
@@ -525,5 +632,5 @@
 </div>
 
 <style>
-  @import "../styles/Chart.scss";
+  @import "./Chart.scss";
 </style>

@@ -1,4 +1,5 @@
 export interface SensorData {
+    [x: string]: any;
     //id: string;
     name: string;
     type: string;
@@ -13,7 +14,8 @@ export interface DeviceData{
 }
 
 export interface ChartData {
-    //id?: string;
+    [x: string]: any;
+   // id?: string;
     name?: string;
     type?: string;
     description?: string;

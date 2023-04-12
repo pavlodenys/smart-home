@@ -11,6 +11,8 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using SmartHome.Api.Utilities;
 
 namespace SmartHome.Api
 {
@@ -31,22 +33,49 @@ namespace SmartHome.Api
             // Add services to the container.
             services.AddDbContext<SmartHomeDbContext>(options => options
                     .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddSingleton<SmartHomeDbContext>();
             services.AddSingleton(typeof(IRepository<Sensor, SensorDto>), typeof(Repository<Sensor, SensorDto>));
             services.AddSingleton(typeof(IRepository<Device, DeviceDto>), typeof(Repository<Device, DeviceDto>));
             services.AddSingleton(typeof(IRepository<Scenario, ScenarioDto>), typeof(Repository<Scenario, ScenarioDto>));
+            services.AddSingleton(typeof(IRepository<Point, PointDto>), typeof(Repository<Point, PointDto>));
+            services.AddSingleton(typeof(IRepository<HomeUser, HomeUserDto>), typeof(Repository<HomeUser, HomeUserDto>));
+            services.AddSingleton(typeof(IRepository<RefreshToken, RefreshTokenDto>), typeof(Repository<RefreshToken, RefreshTokenDto>));
+
             services.AddAutoMapper(typeof(SensorProfile));
+
+            services.AddIdentityCore<HomeUser>((setup) =>
+            {
+                setup.Password.RequireDigit = true;
+                setup.Password.RequiredLength = 8;
+                setup.Password.RequireUppercase = true;
+            })
+                //.AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<SmartHomeDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.AddHttpContextAccessor();
+            services.AddScoped<SignInManager<HomeUser>>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
 
             var tokenValidatorParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
+                //ValidateIssuer = true,
+                //ValidateAudience = true,
+                //ValidateLifetime = true,
+                //ValidateIssuerSigningKey = true,
+                //ValidIssuer = Configuration["Jwt:Issuer"],
+                //ValidAudience = Configuration["Jwt:Audience"],
+                //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = Configuration["Jwt:Issuer"],
-                ValidAudience = Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Jwt:Key"])),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero
             };
+
+            services.AddRouting();
 
             services.AddAuthentication(options =>
             {
@@ -73,6 +102,12 @@ namespace SmartHome.Api
                     //    }
                     //};
                 });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("AdminPolicy", policy =>
+                    policy.RequireRole("Admin"));
+            });//todo: check
 
             services.AddSingleton<IService, Services>();
 

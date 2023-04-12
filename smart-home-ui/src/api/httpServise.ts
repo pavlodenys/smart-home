@@ -1,17 +1,20 @@
+import { push } from "svelte-spa-router";
+import { cleanJwtToken } from "./auth";
 
 const baseUrl = "https://localhost:7138/"; //TODO: Get from config
 const getConfig = (): HeadersInit => {
     const token = localStorage.getItem('accessToken');
     if (token) {
         return {
-            "Authorization": token,
+            "Authorization": `Bearer ${JSON.parse(token).accessToken}`,
             "Content-Type": "application/json"
         };
     }
-    return {};
+    return { "Content-Type": "application/json" };
 }
 const httpMethod = async (method, url, data = null) => {
     const config = getConfig();
+
     const response = await fetch(baseUrl + url, data !== null ? {
         method: method,
         headers: config,
@@ -21,7 +24,17 @@ const httpMethod = async (method, url, data = null) => {
         headers: config
     });
 
-    return await response.json();
+    if (response.ok) {
+        return await response.json();
+    } else {
+       if(response.status === 401) {
+           cleanJwtToken();
+           push(`/login`);
+       } else {
+        return await response.text();
+       }
+
+    }
 }
 
 export const httpFetch = {
@@ -31,11 +44,11 @@ export const httpFetch = {
     post: async (url, data) => {
         return await httpMethod("POST", url, data);
     },
-    patch: async (url) => {
-        return await httpMethod("POST", url);
+    patch: async (url, data) => {
+        return await httpMethod("POST", url, data);
     },
-    put: async (url) => {
-        return await httpMethod("PUT", url);
+    put: async (url, data) => {
+        return await httpMethod("PUT", url, data);
     },
     delete: async (url) => {
         return await httpMethod("DELETE", url);

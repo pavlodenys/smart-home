@@ -1,3 +1,4 @@
+import { httpFetch } from './httpServise';
 // src/lib/auth.ts
 export interface SessionData {
     accessToken: string;
@@ -25,37 +26,31 @@ export const getJwtToken = () => {
     return null;
 }
 
-export const loginApi = (email, password) => {
+export const cleanJwtToken = () => {
+    localStorage.removeItem('accessToken');
+}
 
-    setToken(email);
-    return {success: true};
-    // try {
-    //     const response = await fetch('/api/auth/login', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json',
-    //         },
-    //         body: JSON.stringify({
-    //             email,
-    //             password,
-    //         }),
-    //     });
+export const loginApi = async (email, password) => {
+    try {
+        const response = await httpFetch.post('api/auth/login', {
+           username: email,
+            password,
+        });
 
-    //     if (response.ok) {
-    //         const { access_token } = await response.json();
-    //         setToken(access_token);
+        if (response.token) {
+           // const { token } = await response.json();
+            setToken(response.token);
 
-    //         return 'ok';
-    //     } else {
-    //         throw new Error('Login failed');
-    //     }
-    // } catch (err) {
-    //     return err.message;
-    // }
+            return { success: true };
+        } else {
+            let error = JSON.parse(response);
+            throw new Error(error ? error.message : 'Login failed');
+        }
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
 }
 
 const setToken = (accessCode) => {
     localStorage.setItem('accessToken', JSON.stringify({ accessToken: accessCode }));
 }
-
-

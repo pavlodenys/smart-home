@@ -1,20 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Router from "svelte-spa-router";
-  import Dashboard from "./Dashboard.svelte";
-  import Login from "./components/Login.svelte";
-  import Home from "./components/Home.svelte";
-  import NotFound from "./components/NotFound.svelte";
 
-  import SensorDetail from "./components/sensor-datail/SensorDetail.svelte";
-  import { getJwtToken, getSession } from "./api/auth";
+
+  import { getJwtToken, cleanJwtToken } from "./api/auth";
   import "./app.css";
   import { redirect } from "./redirects";
-  import AuthRoute from "./lib/AuthRoute.svelte";
-  import { wrap } from "svelte-spa-router/wrap";
-  import jwtDecode from "jwt-decode";
-  import { navigate } from "svelte-routing";
-  import { push, pop, replace } from "svelte-spa-router";
+  import { push } from "svelte-spa-router";
+  import { routes } from "./routes";
 
   let authenticated;
 
@@ -32,28 +25,17 @@
 
   const logout = () => {
     authenticated = false;
+    cleanJwtToken();
   };
 
-  const routes = {
-    "/": Home,
-    "/dashboard": wrap({
-      component: Dashboard,
-      conditions: [(detail) => routeLoading(detail)],
-    }),
-    "/sensor": wrap({
-      asyncComponent: () =>
-        import("./components/sensor-datail/SensorDetail.svelte"),
-    }),
-    "/sensor/:id": wrap({
-      asyncComponent: () =>
-        import("./components/sensor-datail/SensorDetail.svelte"),
-    }),
-    "/login": Login,
-    "*": NotFound,
-  };
+
 
   const routeLoading = (event) => {
     console.log(event);
+
+    if (event.detail.route === "/forgot-password" || event.detail.route === "/register") {
+      return true;
+    }
 
     const jwtToken = getJwtToken();
 
@@ -83,22 +65,38 @@
   };
 </script>
 
-<nav>
-  <a href="/">Home</a>
-  <a href="/#/dashboard">Dashboard</a>
-  {#if !authenticated}
-    <a href="/#/login">Login</a>
-  {/if}
-  {#if authenticated}
-    <a href="/#/login" on:click={logout}>Logout</a>
-  {/if}
+<nav class="topbar">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#646cff5a" rx="10" ry="10" />
+      <rect x="25%" y="25%" width="50%" height="50%" fill="#007aff" />
+      <circle cx="50%" cy="50%" r="40%" fill="#fff" />
+      <circle cx="50%" cy="50%" r="30%" fill="#007aff" />
+      <rect x="35%" y="40%" width="30%" height="20%" fill="#fff" />
+    </svg>
+  </a>
+  <div class="links">
+    <a href="/#/dashboard">Dashboard</a>
+    {#if !authenticated}
+      <a href="/#/login">Login</a>
+    {/if}
+    {#if authenticated}
+      <a href="/#/login" on:click={logout}>Logout</a>
+    {/if}
+  </div>
 </nav>
 
+<!-- <Router
+  {routes}
+  on:routeLoading={routeLoading}
+  on:conditionsFailed={conditionsFailed}
+/> -->
 <Router
   {routes}
   on:routeLoading={routeLoading}
   on:conditionsFailed={conditionsFailed}
-/>
+/> 
+
 
 <style>
   @import "./styles/App.scss";
