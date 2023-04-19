@@ -16,15 +16,15 @@ namespace SmartHome.Logic
     }
     public interface IRepository<TEntity,TDto> : IRepository where TEntity : class
     {
-        Task<IQueryable<TDto>> GetAll();
+        IQueryable<TDto> GetAll();
         IQueryable<TDto> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0);
         TDto GetDtoById(int id);
-        TEntity GetById(int id);
+        TEntity? GetById(int id);
         Task<TDto> GetById(Expression<Func<TEntity, bool>> condition, Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>? include = null);
         TDto GetMapById(int id); // Rename to GetById
         Task<TDto> Create(TDto entity);
         TEntity Update(TEntity entity);
-        TEntity Update(int id, TDto entity); // make Tentity Id
+        TEntity? Update(int id, TDto entity); // make Tentity Id
 
        // TDto UpdateDto(int id, TDto dto);
         Task<int> Delete(TEntity entity);
@@ -44,9 +44,9 @@ namespace SmartHome.Logic
             _mapper = mapper;
         }
 
-        public TEntity GetById(int id)
+        public TEntity? GetById(int id)
         {
-            return _dbContext.Set<TEntity>().Find(id);
+            return _dbContext.Set<TEntity>().Find(id) ?? null;
         }
 
         public TDto GetDtoById(int id)
@@ -101,7 +101,7 @@ namespace SmartHome.Logic
             return rowsDeleted;
         }
 
-       public async Task<IQueryable<TDto>> GetAll()
+        public IQueryable<TDto> GetAll()
         {
             return _set.ProjectTo<TDto>(_mapper.ConfigurationProvider);
         }

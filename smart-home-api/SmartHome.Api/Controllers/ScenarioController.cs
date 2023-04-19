@@ -32,13 +32,13 @@ namespace SmartHome.Api.Controllers
         [Route("")]
         public async Task<IActionResult> GetScenarious()
         {
-            var scenarious = await _scenarioRepo.GetAll();
+            var scenarious = _scenarioRepo.GetAll();
             return base.Ok(await scenarious.ToListAsync());
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetScenario(int id)
+        public IActionResult GetScenario(int id)
         {
             return Ok(_scenarioRepo.GetById(id));
         }

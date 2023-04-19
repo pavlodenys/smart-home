@@ -45,7 +45,6 @@ namespace SmatHome.Connector
         private readonly string _queueName;
         private readonly IConnection _connection;
         private readonly IModel _channel;
-        private readonly IService _service;
 
         public RabbitMQListener(string exchangeName, string queueName)
         {
@@ -81,35 +80,21 @@ namespace SmatHome.Connector
                 if (point != null)
                 {
                     dataId = point.Id;
-                }
-                using (var db = new SmartHomeDbContext())
-                {
-                    var data = new Point
-                    {
-                        Value = point.Value,
-                       // Name = "C",
-                        Name = point.Name,
-                        DateTime = DateTime.Now,
-                        DataId = dataId
-                    };
-                    db.Add(data);
-                    db.SaveChanges();
-                    var allScenarios = db.Scenarios.Where(s => s.Sensors.Any(se => se.Id == point.Id)).ToList();
 
-                    foreach (var scenario in allScenarios)
+                    using (var db = new SmartHomeDbContext())
                     {
-                        var scenarioDevice = scenario.Devices.FirstOrDefault();
-                        if (scenarioDevice != null)
+                        var data = new Point
                         {
-                            var result = _service.CheckScenario(scenarioDevice.Device, scenario.Operator, point.Value, scenario.SensorValue);
-
-                            if (result)
-                            {
-                                db.SaveChanges();
-                            }
-                        }
-                    }
-                };
+                            Value = point.Value,
+                            // Name = "C",
+                            Name = point.Name,
+                            DateTime = DateTime.Now,
+                            DataId = dataId
+                        };
+                        db.Add(data);
+                        db.SaveChanges();
+                    };
+                }
             };
             _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
         }

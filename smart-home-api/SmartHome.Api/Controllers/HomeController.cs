@@ -14,7 +14,7 @@ namespace SmartHome.Api.Controllers
     public class HomeController : ControllerBase
     {
         private IRepository<Sensor, SensorDto> _repo { get; set; }
-        private IRepository<SmartHome.Data.Entities.Data, ChartDataDto> _dataRepo { get; set; }
+        //private IRepository<SmartHome.Data.Entities.Data, ChartDataDto> _dataRepo { get; set; }
         private IRepository<Point, PointDto> _pointsRepo { get; set; }
         private IRepository<Device, DeviceDto> _devicesRepo { get; set; }
 
@@ -36,14 +36,14 @@ namespace SmartHome.Api.Controllers
         [HttpGet]
         [Route("sensors")]
         //[Authorize]
-        public async Task<IActionResult> GetSensors()
+        public IActionResult GetSensors()
         {
             var user = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 
-            var sensors = await _repo.GetAll();
+            var sensors = _repo.GetAll();
 
             _logger.Log(LogLevel.Information, "Get Sensors Data");
-            
+
             return Ok(sensors);
         }
         [HttpGet]
@@ -61,7 +61,7 @@ namespace SmartHome.Api.Controllers
         [HttpGet]
         [Route("sensors/{id}/data/{page}/{count}")]
         //[Authorize]
-        public async Task<IActionResult> GetSensorData(int id, int page, int count)
+        public IActionResult GetSensorData(int id, int page, int count)
         {
             var sensorData = _pointsRepo.GetAll(b => b.DataId == id, page, count);
 
@@ -104,19 +104,23 @@ namespace SmartHome.Api.Controllers
 
         [HttpDelete]
         [Route("sensors/{id}")]
-        public async Task<IActionResult> DeleteSensor(int id)
+        public IActionResult DeleteSensor(int id)
         {
             var entity = _repo.GetById(id); // TODO: delete by id
-            var deleteResult = _repo.Delete(entity);
+            if (entity != null)
+            {
+                var deleteResult = _repo.Delete(entity);
+                return Ok(deleteResult);
+            }
 
-            return Ok(deleteResult);
+            return Ok(false);
         }
 
         [HttpGet]
         [Route("device")]
-        public async Task<IActionResult> GetAllDevices()
+        public IActionResult GetAllDevices()
         {
-            var devices = await _devicesRepo.GetAll();
+            var devices = _devicesRepo.GetAll();
 
             return Ok(devices);
         }

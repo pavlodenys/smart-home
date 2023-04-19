@@ -13,6 +13,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using SmartHome.Api.Utilities;
+using SmartHome.Api.Worker;
 
 namespace SmartHome.Api
 {
@@ -42,6 +43,13 @@ namespace SmartHome.Api
             services.AddSingleton(typeof(IRepository<HomeUser, HomeUserDto>), typeof(Repository<HomeUser, HomeUserDto>));
             services.AddSingleton(typeof(IRepository<RefreshToken, RefreshTokenDto>), typeof(Repository<RefreshToken, RefreshTokenDto>));
 
+            services.AddSingleton<ScenarioService>();
+
+            services.AddSingleton<ScenariosQueue>();
+
+            services.AddHostedService<ScenarioConsumer>();
+            services.AddHostedService<ScenarioProducer>();
+
             services.AddAutoMapper(typeof(SensorProfile));
 
             services.AddIdentityCore<HomeUser>((setup) =>
@@ -69,7 +77,7 @@ namespace SmartHome.Api
                 //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Jwt:Key"])),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Jwt:Key"] ?? "jwt_key")),
                 ValidateIssuer = false,
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero
@@ -113,7 +121,8 @@ namespace SmartHome.Api
 
             services.AddControllers().AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.IgnoreNullValues = true;
+                //options.JsonSerializerOptions.IgnoreNullValues = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
             });
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();

@@ -11,11 +11,10 @@ using System.Threading.Tasks;
 
 namespace SmartHome.Logic
 {
-
     public interface IService
     {
         bool ChangeStatus(int id);
-        bool CheckScenario(Device device, ComparisonOperator op, double sensorData, double value);
+        bool CheckScenario(DeviceDto device, ComparisonOperator op, IEnumerable<PointDto> sensorData, double value);
     }
     public class Services : IService
     {
@@ -33,46 +32,53 @@ namespace SmartHome.Logic
             device.IsActive = !device.IsActive;
             var updateD = _repository.Update(id, device);
 
-            return updateD.IsActive;
+            if (updateD != null)
+            {
+                return updateD.IsActive;
+            }
+
+            return false;
         }
 
-        public bool CheckScenario(Device device, ComparisonOperator op, double sensorData, double value)
+        public bool CheckScenario(DeviceDto? device, ComparisonOperator op, IEnumerable<PointDto>? sensorData, double value)
         {
+            if(device == null || sensorData == null) return false;
+
             switch (op)
             {
                 case ComparisonOperator.GreaterThan:
-                    if (sensorData > value)
+                    if (sensorData.Any(x => x.Value > value))
                     {
                         ChangeStatus(device.Id);
 
                     }
                     break;
                 case ComparisonOperator.LessThan:
-                    if (sensorData < value)
+                    if (sensorData.Any(x => x.Value < value))
                     {
                         ChangeStatus(device.Id);
                     }
                     break;
                 case ComparisonOperator.Equal:
-                    if (sensorData == value)
+                    if (sensorData.Any(x => x.Value == value))
                     {
                         ChangeStatus(device.Id);
                     }
                     break;
                 case ComparisonOperator.NotEqual:
-                    if (sensorData != value)
+                    if (sensorData.Any(x => x.Value != value))
                     {
                         ChangeStatus(device.Id);
                     }
                     break;
                 case ComparisonOperator.GreaterThanOrEqual:
-                    if (sensorData >= value)
+                    if (sensorData.Any(x => x.Value >= value))
                     {
                         ChangeStatus(device.Id);
                     }
                     break;
                 case ComparisonOperator.LessThanOrEqual:
-                    if (sensorData <= value)
+                    if (sensorData.Any(x => x.Value <= value))
                     {
                         ChangeStatus(device.Id);
                     }

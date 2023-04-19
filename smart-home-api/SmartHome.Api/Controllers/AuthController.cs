@@ -56,7 +56,7 @@ namespace SmartHome.Api.Controllers
 
             //await _userManager.AddToRoleAsync(user, "User");
 
-            var token = await _jwtTokenService.GenerateAccessToken(user);
+            var token = _jwtTokenService.GenerateAccessToken(user);
 
             return Ok(new
             {
@@ -83,7 +83,7 @@ namespace SmartHome.Api.Controllers
                 return BadRequest(new { message = "Invalid credentials" });
             }
 
-            var token = await _jwtTokenService.GenerateAccessToken(user);
+            var token = _jwtTokenService.GenerateAccessToken(user);
 
             return Ok(new
             {
@@ -116,6 +116,9 @@ namespace SmartHome.Api.Controllers
         {
             var principal = _jwtTokenService.GetPrincipalFromToken(model.Token);
             var username = principal?.Identity?.Name;
+            if(username == null) {
+                return Unauthorized(new { message = "User not found" });
+            }
             var user = await _userManager.FindByNameAsync(username);
 
             if (user == null || !user.IsActive || user.RefreshTokens.All(rt => rt.Token != model.Token))
@@ -134,7 +137,7 @@ namespace SmartHome.Api.Controllers
                 return Unauthorized(new { message = "Expired token" });
             }
 
-            var newToken = await _jwtTokenService.GenerateAccessToken(user);
+            var newToken = _jwtTokenService.GenerateAccessToken(user);
             var newRefreshToken = GenerateRefreshToken(user);
 
             await _tokenRepository.Delete(existingRefreshToken);

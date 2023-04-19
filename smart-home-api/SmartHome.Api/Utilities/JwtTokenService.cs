@@ -18,7 +18,7 @@ namespace SmartHome.Api.Utilities
             _userManager = userManager;
         }
 
-        public async Task<string> GenerateAccessToken(HomeUser user)
+        public string GenerateAccessToken(HomeUser user)
         {
             var claims = new List<Claim>
         {
@@ -30,7 +30,7 @@ namespace SmartHome.Api.Utilities
             //var roles = await _userManager.GetRolesAsync(user);
             //claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "jwt_key"));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
@@ -43,7 +43,7 @@ namespace SmartHome.Api.Utilities
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public ClaimsPrincipal GetPrincipalFromToken(string token)
+        public ClaimsPrincipal? GetPrincipalFromToken(string token)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             try
@@ -69,7 +69,7 @@ namespace SmartHome.Api.Utilities
 
     public interface IJwtTokenService
     {
-        Task<string> GenerateAccessToken(HomeUser user);
-        ClaimsPrincipal GetPrincipalFromToken(string token);
+        string GenerateAccessToken(HomeUser user);
+        ClaimsPrincipal? GetPrincipalFromToken(string token);
     }
 }
