@@ -165,12 +165,7 @@ namespace SmartHome.Api
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<MyHub>("/myhub"); // Map your SignalR hub
-                                                   // Additional endpoints for your project
-            });
-
-            app.UseEndpoints(endpoints =>
-            {
+                endpoints.MapHub<MyHub>("/myhub");
                 endpoints.MapControllers();
             });
         }

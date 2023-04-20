@@ -11,7 +11,10 @@
   export let chartId;
 
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl("https://localhost:7138/myhub", { withCredentials: true }) // Specify the URL of your SignalR hub
+    .withUrl("https://localhost:7138/myhub",{
+      skipNegotiation: true,
+      transport: signalR.HttpTransportType.WebSockets
+    }) // Specify the URL of your SignalR hub
     .build();
 
   let selectedDate = moment().format("YYYY-MM-DD");
