@@ -4,6 +4,7 @@
   import { httpFetch } from "../../api/httpServise";
   import { location } from "svelte-spa-router";
   import type { ChartData, SensorData } from "../../types";
+  import moment from "moment";
 
   const getInitialChartData = () => {
     return {
@@ -29,7 +30,8 @@
 
   onMount(async () => {
     if (params?.id) {
-      sensor = await httpFetch.get(`api/home/sensors/${params.id}`);
+      let date = moment().format('YYYY-MM-DD');
+      sensor = await httpFetch.get(`api/home/sensors/${params.id}/${date}`);
     } else {
       sensor = {
         //id: "",

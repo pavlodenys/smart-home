@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SmartHome.Data;
@@ -60,7 +61,7 @@ namespace SmatHome.Connector
             _channel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _queueName);
         }
 
-        public void StartListening()
+        public void StartListening(HubConnection connection)
         {
             var consumer = new EventingBasicConsumer(_channel);
             consumer.ConsumerCancelled += (model, ea) =>
@@ -93,6 +94,8 @@ namespace SmatHome.Connector
                         };
                         db.Add(data);
                         db.SaveChanges();
+
+                        connection.InvokeAsync("RabbitMQMessage", data); //TODO: check
                     };
                 }
             };
@@ -101,12 +104,18 @@ namespace SmatHome.Connector
     }
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine(" [*] Start listening...");
 
+            var connection = new HubConnectionBuilder()
+    .WithUrl("https://localhost:7138/myhub") // Specify the URL of your SignalR hub
+    .Build();
+
+            await connection.StartAsync();
+
             var rabbitMqListener = new RabbitMQListener("amq.topic", "sensors_data");
-            rabbitMqListener.StartListening();
+            rabbitMqListener.StartListening(connection);
 
             Console.ReadKey();
         }

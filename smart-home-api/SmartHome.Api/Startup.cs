@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using SmartHome.Api.Utilities;
 using SmartHome.Api.Worker;
+using Microsoft.AspNetCore.SignalR;
+using SmartHome.Api.Hubs;
 
 namespace SmartHome.Api
 {
@@ -44,6 +46,7 @@ namespace SmartHome.Api
             services.AddSingleton(typeof(IRepository<RefreshToken, RefreshTokenDto>), typeof(Repository<RefreshToken, RefreshTokenDto>));
 
             services.AddSingleton<ScenarioService>();
+            services.AddSingleton<Services>();
 
             services.AddSingleton<ScenariosQueue>();
 
@@ -82,6 +85,8 @@ namespace SmartHome.Api
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero
             };
+
+            services.AddSignalR();
 
             services.AddRouting();
 
@@ -157,6 +162,13 @@ namespace SmartHome.Api
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<MyHub>("/myhub"); // Map your SignalR hub
+                                                   // Additional endpoints for your project
+            });
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

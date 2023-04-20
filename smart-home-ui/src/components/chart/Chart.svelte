@@ -3,11 +3,16 @@
   import type { ChartData, PointDto } from "../../types";
   import * as d3 from "d3";
   import moment from "moment";
+  import * as signalR from "@microsoft/signalr";
 
   //TODO: add real-time update
 
   export let chart: ChartData;
   export let chartId;
+
+  const connection = new signalR.HubConnectionBuilder()
+    .withUrl("https://localhost:7138/myhub", { withCredentials: true }) // Specify the URL of your SignalR hub
+    .build();
 
   let selectedDate = moment().format("YYYY-MM-DD");
   const dispatch = createEventDispatcher();
@@ -388,6 +393,15 @@
   };
 
   onMount(() => {
+    connection.start().catch((err) => console.error(err));
+    function sendMessage(message) {
+      connection
+        .invoke("SendMessage", message)
+        .catch((err) => console.error(err));
+    }
+    connection.on("ReceiveMessage", (receivedMessage) => {
+      console.log(receivedMessage);
+    });
     const allPoints = chart.data;
 
     if (!allPoints || !allPoints.length) {
@@ -556,8 +570,7 @@
       const newXDomain = [x.invert(x0), x.invert(x1)];
 
       let extent = event.selection; // looks like [ [12,11], [132,178]]
-let circles = svg
-      .selectAll(`.dot-${chartId}`);
+      let circles = svg.selectAll(`.dot-${chartId}`);
       // Is the circle in the selection?
       let isBrushed =
         extent[0][0] <= circles.attr("cx") &&

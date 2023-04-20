@@ -47,12 +47,17 @@ namespace SmartHome.Api.Controllers
             return Ok(sensors);
         }
         [HttpGet]
-        [Route("sensors/{id}")]
+        [Route("sensors/{id}/{date}")]
         //[Authorize]
-        public async Task<IActionResult> GetSensorDetails(int id)
+        public async Task<IActionResult> GetSensorDetails(int id, string date)
         {
+            var filterDate = DateTime.Parse(date);
             var sensor = await _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
-
+            
+            foreach(var data in sensor.ChartData)
+            {
+                data.Data = data.Data.Where(x => x.DateTime >=filterDate).ToArray();
+            }
             _logger.Log(LogLevel.Information, "Get Sensors Details");
 
             return Ok(sensor);
