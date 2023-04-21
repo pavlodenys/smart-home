@@ -3,7 +3,7 @@ using SmartHome.Data.Entities;
 
 namespace SmartHome.Api.Hubs
 {
-    public class MyHub : Hub
+    public class SensorsHub : Hub
     {
         public async Task RabbitMQMessage(Point point)
         {

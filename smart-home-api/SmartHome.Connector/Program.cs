@@ -109,10 +109,11 @@ namespace SmatHome.Connector
             Console.WriteLine(" [*] Start listening...");
 
             var connection = new HubConnectionBuilder()
-    .WithUrl("https://localhost:7138/myhub") // Specify the URL of your SignalR hub
+    .WithUrl("https://localhost:7138/hub") // Specify the URL of your SignalR hub
     .Build();
 
             await connection.StartAsync();
+            Console.WriteLine($" [*] Signalr state = {connection.State}");
 
             var rabbitMqListener = new RabbitMQListener("amq.topic", "sensors_data");
             rabbitMqListener.StartListening(connection);

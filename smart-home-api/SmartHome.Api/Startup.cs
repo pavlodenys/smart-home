@@ -165,7 +165,7 @@ namespace SmartHome.Api
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<MyHub>("/myhub");
+                endpoints.MapHub<SensorsHub>("/hub");
                 endpoints.MapControllers();
             });
         }

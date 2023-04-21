@@ -11,9 +11,9 @@
   export let chartId;
 
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl("https://localhost:7138/myhub",{
+    .withUrl("https://localhost:7138/hub", {
       skipNegotiation: true,
-      transport: signalR.HttpTransportType.WebSockets
+      transport: signalR.HttpTransportType.WebSockets,
     }) // Specify the URL of your SignalR hub
     .build();
 
@@ -163,7 +163,7 @@
             Math.min(xPos, minimapElementWidth - trackerWidth)
           );
 
-          console.log(`${xPos} ${minimapElementWidth} ${trackerWidth}`);
+         // console.log(`${xPos} ${minimapElementWidth} ${trackerWidth}`);
           //console.log(clampedXPos);
 
           //tracker.attr("x", clampedXPos);
@@ -232,7 +232,7 @@
         });
       })
       .on("end", (e) => {
-        console.log(e);
+       // console.log(e);
         dispatch("chartEvent", { dataId: chart.id, page: 1 });
         tracker.style("cursor", "grab");
       });
@@ -275,6 +275,7 @@
     if (!data || !data.length) {
       return;
     }
+    //console.log(data.length);
     const firtPoint = getFirstPoint(data);
     const xDomain = [
       firtPoint,
@@ -304,7 +305,7 @@
     const line = svg.select(".line");
     const miniline = svgMap.select(".line");
 
-    console.log(miniline);
+    //console.log(miniline);
     if (line.size()) {
       line.datum(data);
       miniline.data([data]);
@@ -325,7 +326,7 @@
           .x((d: any) => x(new Date(formatDate(d.dateTime))))
           .y((d: any) => y(d.value))
       );
-    console.log(minix(new Date(formatDate(data[0].dateTime))));
+    //console.log(minix(new Date(formatDate(data[0].dateTime))));
     miniline
       .transition()
       .duration(1000)
@@ -338,14 +339,25 @@
       );
 
     // Select the circles and bind the new data to them
-    let circles = svg.selectAll(`.dot-${chartId}`);
+    let circles = svg.selectAll(`.dot-${chartId}`).data(data);
     if (circles.size()) {
-      circles.data(data);
+      //circles.data(data);
       circles
         .transition()
         .duration(1000)
-        .attr("cx", (d) => x(new Date(formatDate(d.date))))
+        .attr("transform", `translate(${margin.left}, 0)`)
+        .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
         .attr("cy", (d) => y(d.value));
+
+      circles
+        .enter()
+        .append("circle")
+        .attr("class", `dot-${chartId}`)
+         .attr("transform", `translate(${margin.left}, 0)`)
+        .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
+        .attr("cy", (d) => y(d.value))
+        .attr("r", 5) // specify the radius or any other attributes for the new circles
+        .attr("fill", "blue"); // specify the fill color or any other style for the new circles
     } else {
       circles = createCircle(svg, data, margin, x, y);
     }
@@ -396,6 +408,8 @@
   };
 
   onMount(() => {
+    const allPoints = chart.data;
+
     connection.start().catch((err) => console.error(err));
     function sendMessage(message) {
       connection
@@ -403,9 +417,27 @@
         .catch((err) => console.error(err));
     }
     connection.on("ReceiveMessage", (receivedMessage) => {
-      console.log(receivedMessage);
+      //console.log(receivedMessage);
+      if (chart.id === receivedMessage.dataId) {
+        allPoints.push(receivedMessage);
+
+        const filteredPoints = filterPoints(allPoints, selectedDate);
+
+        updateDataChart(
+          filteredPoints,
+          x,
+          y,
+          xAxisSvg,
+          yAxisSvg,
+          svg,
+          margin,
+          svgMinimap,
+          minimapLine,
+          minimapXScale,
+          minimapYScale
+        );
+      }
     });
-    const allPoints = chart.data;
 
     if (!allPoints || !allPoints.length) {
       return;
@@ -501,7 +533,7 @@
         d3.selectAll(`.dot-${chartId}`).remove();
         return;
       }
-      console.log(xAxis);
+     // console.log(xAxis);
       updateDataChart(
         filteredPoints,
         x,
@@ -587,7 +619,7 @@
       }
 
       // Call an API to load data for the new domain.
-      console.log(newXDomain);
+     // console.log(newXDomain);
     }
 
     // d3.select(window).on("keydown", (event) => {
