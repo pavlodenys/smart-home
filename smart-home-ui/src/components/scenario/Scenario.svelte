@@ -48,7 +48,7 @@
   };
 
   onMount(async () => {
-    const scenarios = await httpFetch.get(`api/scenario`);
+     scenarios = await httpFetch.get(`api/scenario`);
 
     console.log(scenarios);
 

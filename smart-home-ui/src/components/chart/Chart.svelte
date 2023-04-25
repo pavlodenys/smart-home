@@ -4,6 +4,7 @@
   import * as d3 from "d3";
   import moment from "moment";
   import * as signalR from "@microsoft/signalr";
+  import { httpFetch } from "../../api/httpServise";
 
   //TODO: add real-time update
 
@@ -163,7 +164,7 @@
             Math.min(xPos, minimapElementWidth - trackerWidth)
           );
 
-         // console.log(`${xPos} ${minimapElementWidth} ${trackerWidth}`);
+          // console.log(`${xPos} ${minimapElementWidth} ${trackerWidth}`);
           //console.log(clampedXPos);
 
           //tracker.attr("x", clampedXPos);
@@ -232,7 +233,7 @@
         });
       })
       .on("end", (e) => {
-       // console.log(e);
+        // console.log(e);
         dispatch("chartEvent", { dataId: chart.id, page: 1 });
         tracker.style("cursor", "grab");
       });
@@ -252,11 +253,19 @@
       .attr("cy", (d) => y(d.value));
   };
 
-  const filterPoints = (points, date) => {
-    return points.filter((point) => {
+  const filterPoints = async (points, date) => {
+    let filtered = points.filter((point) => {
       const pointDate = new Date(point.dateTime);
       return moment(pointDate).format("YYYY-MM-DD") === date;
     });
+
+    if (!filtered.length) {
+      let sensor = await httpFetch.get(`api/home/sensors/${chart.id}/${date}`);
+      filtered = sensor.chartData[chartId].data;
+    }
+    console.log(points);
+
+    return filtered;
   };
 
   const updateDataChart = (
@@ -353,7 +362,7 @@
         .enter()
         .append("circle")
         .attr("class", `dot-${chartId}`)
-         .attr("transform", `translate(${margin.left}, 0)`)
+        .attr("transform", `translate(${margin.left}, 0)`)
         .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
         .attr("cy", (d) => y(d.value))
         .attr("r", 5) // specify the radius or any other attributes for the new circles
@@ -361,53 +370,9 @@
     } else {
       circles = createCircle(svg, data, margin, x, y);
     }
-
-    // Move the circles to their new positions
-
-    // const yMin = d3.min(pointsData, (d: any) => d.value);
-    // const yMax = d3.max(pointsData, (d: any) => d.value);
-
-    // const firstPoint =
-    //   pointsData && pointsData.length ? pointsData[2].dateTime : new Date();
-
-    // const xDomain = [
-    //   new Date(formatDate(firstPoint)),
-    //   d3.max(pointsData, (d: any) => new Date(formatDate(d.dateTime))),
-    // ];
-    // const yDomain = [scaleParamMin * yMin, scaleParam * yMax];
-
-    // const xDomainMap = d3.extent(
-    //   pointsData,
-    //   (d: any) => new Date(formatDate(d.dateTime))
-    // );
-    // const yDomainMap = [
-    //   d3.min(pointsData, (d: any) => d.value),
-    //   d3.max(pointsData, (d: any) => d.value),
-    // ];
-
-    // updateScales(xDomain, yDomain, x, y, xAxis, yAxis);
-
-    // const line = svg.select(".line");
-    // line.data([pointsData]).attr(
-    //   "d",
-    //   d3
-    //     .line()
-    //     .x((d: any) => x(new Date(d.dateTime)))
-    //     .y((d: any) => y(d.value))
-    // );
-
-    // const circles = svg.selectAll(".circle").data(pointsData, (d) => d.id);
-    // circles
-    //   .enter()
-    //   .append("circle")
-    //   .attr("class", "circle")
-    //   .attr("cx", (d) => x(new Date(d.dateTime)))
-    //   .attr("cy", (d) => y(d.value))
-    //   .attr("r", 4);
-    // circles.exit().remove();
   };
 
-  onMount(() => {
+  onMount(async() => {
     const allPoints = chart.data;
 
     connection.start().catch((err) => console.error(err));
@@ -446,7 +411,7 @@
 
     // let x, y, xAxis, yAxis, svg;
 
-    const points = filterPoints(allPoints, selectedDate);
+    const points = await filterPoints(allPoints, selectedDate);
 
     // if (!points || !points.length) {
     //   return;
@@ -523,17 +488,17 @@
 
     const gBrush = svg.append("g").attr("class", "brush").call(brush);
 
-    datePicker.on("change", (e) => {
+    datePicker.on("change", async (e) => {
       const newDate = datePicker.node().value;
       selectedDate = newDate;
-      const filteredPoints = filterPoints(allPoints, newDate);
+      const filteredPoints = await filterPoints(allPoints, newDate);
 
       if (!filteredPoints || !filteredPoints.length) {
         d3.select(".line").remove();
         d3.selectAll(`.dot-${chartId}`).remove();
         return;
       }
-     // console.log(xAxis);
+      // console.log(xAxis);
       updateDataChart(
         filteredPoints,
         x,
@@ -619,7 +584,7 @@
       }
 
       // Call an API to load data for the new domain.
-     // console.log(newXDomain);
+      // console.log(newXDomain);
     }
 
     // d3.select(window).on("keydown", (event) => {
@@ -668,10 +633,11 @@
 
 <div>
   <div>{chart.name}</div>
-  {#if chart.data}
     <div>
       <input id="date-{chartId}" type="date" bind:value={selectedDate} />
     </div>
+  {#if chart.data}
+  
     <div id="chart-{chartId}" />
     <div id="minimap-{chartId}" />
   {:else}
