@@ -1,9 +1,12 @@
-﻿namespace SmartHome.Data.DTO
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace SmartHome.Data.DTO
 {
     public class LoginDto
     {
         //public string Email { get; set; }
-        public string UserName { get; set; }
-        public string Password { get; set; }
+        [Required]
+        public string UserName { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

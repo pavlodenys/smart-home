@@ -5,16 +5,17 @@ namespace SmartHome.Api.Utilities
 {
     public class ScenariosQueue
     {
-        private readonly ConcurrentQueue<ScenarioDto> _queue = new ConcurrentQueue<ScenarioDto>();
+        private readonly ConcurrentQueue<ScenarioDto> _queue = new();
 
         public void Enqueue(ScenarioDto scenario)
         {
             _queue.Enqueue(scenario);
         }
 
-        public bool TryDequeue(out ScenarioDto scenario)
+        public bool TryDequeue(out ScenarioDto? scenario)
         {
-            return _queue.TryDequeue(out scenario);
+            bool result = _queue.TryDequeue(out scenario);
+            return result;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace SmartHome.Api.Worker
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken); // Delay for 1 second
             }
         }
-        private void ProcessScenario(ScenarioDto scenario)
+        private void ProcessScenario(ScenarioDto? scenario)
         {
             if (scenario != null && scenario.Devices != null)
             {

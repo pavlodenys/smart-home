@@ -56,7 +56,7 @@ namespace SmartHome.Api.Controllers
             
             foreach(var data in sensor.ChartData)
             {
-                data.Data = data.Data.Where(x => x.DateTime >=filterDate).ToArray();
+                data.Data = data.Data?.Where(x => x.DateTime >=filterDate).ToArray();
             }
             _logger.Log(LogLevel.Information, "Get Sensors Details");
 

@@ -23,8 +23,8 @@ namespace SmartHome.Api.Utilities
             var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.UserName ?? ""),
+            new Claim(ClaimTypes.Email, user.Email ?? ""),
         };
 
             //var roles = await _userManager.GetRolesAsync(user);
@@ -49,7 +49,7 @@ namespace SmartHome.Api.Utilities
             var tokenHandler = new JwtSecurityTokenHandler();
             try
             {
-                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+                var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"] ?? "jwt_key");
                 tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,

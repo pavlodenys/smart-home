@@ -34,10 +34,10 @@ namespace SmartHome.Api
             // var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            services.AddDbContext<SmartHomeDbContext>(options => options
-                    .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            //services.AddDbContext<SmartHomeDbContext>(options => options
+            //        .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddSingleton<SmartHomeDbContext>();
+            services.AddTransient<SmartHomeDbContext>();
             services.AddSingleton(typeof(IRepository<Sensor, SensorDto>), typeof(Repository<Sensor, SensorDto>));
             services.AddSingleton(typeof(IRepository<Device, DeviceDto>), typeof(Repository<Device, DeviceDto>));
             services.AddSingleton(typeof(IRepository<Scenario, ScenarioDto>), typeof(Repository<Scenario, ScenarioDto>));
