@@ -99,8 +99,8 @@ void loop()
     sprintf_P(tempVal, "%f", t);
     sprintf_P(humVal, "%f", h);
 
-    Point temperature = {4, t};
-    Point humidity = {5, h};
+    Point temperature = {2, t};
+    Point humidity = {3, h};
 
     StaticJsonDocument<128> docT;
     StaticJsonDocument<128> docH;

@@ -2,10 +2,12 @@
   import {link} from 'svelte-spa-router';
   import type { SensorData } from "../../types";
   import Chart from "../chart/Chart.svelte";
+  import { httpFetch } from '../../api/httpServise';
 
   export let sensor: SensorData;
-  const deleteSensor = () => {
-    
+  const deleteSensor = async (id) => {
+    let result = await httpFetch.delete(`api/home/sensors/${id}`);
+    console.log(result);
   }
 </script>
 
@@ -19,6 +21,6 @@
   <div class="sensor-info">Type: {sensor.type}</div>
 
   <a href='{'/sensor/'+sensor.id}' use:link>Details</a>
-  <button on:click={deleteSensor}>Delete</button>
+  <button on:click={() => deleteSensor(sensor.id)}>Delete</button>
 </div>
 
