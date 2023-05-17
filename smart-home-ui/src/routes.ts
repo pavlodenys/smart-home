@@ -9,7 +9,8 @@ import Register from "./components/register/Register.svelte";
 export const routes = {
     "/": Home,
     "/dashboard": wrap({
-        component: Dashboard,
+        asyncComponent: () =>
+            import("./components/dashboard/Dashboard.svelte"),
         //conditions: [(detail) => routeLoading(detail)],
     }),
     "/sensor": wrap({

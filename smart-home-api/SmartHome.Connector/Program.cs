@@ -52,7 +52,8 @@ namespace SmatHome.Connector
             _exchangeName = exchangeName;
             _queueName = queueName;
 
-            var factory = new ConnectionFactory() { HostName = "localhost", UserName = "rmuser", Password = "rmpassword" };
+           /// var factory = new ConnectionFactory() { HostName = "localhost", UserName = "rmuser", Password = "rmpassword" };
+            var factory = new ConnectionFactory() { HostName = "192.168.3.21", UserName = "rmuser", Password = "rmpassword" };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
 
@@ -74,13 +75,13 @@ namespace SmatHome.Connector
                 var message = Encoding.UTF8.GetString(body);
                 // process message and save to database
 
+                var time = ea.BasicProperties.IsTimestampPresent() ? DateTime.FromFileTimeUtc(ea.BasicProperties.Timestamp.UnixTime) : DateTime.Now;
+                // todo: parse time
                 var point = JsonConvert.DeserializeObject<PointDto>(message);
-
-                var dataId = 1; // TODO: make generic
 
                 if (point != null)
                 {
-                    dataId = point.Id;
+                    var dataId = point.Id;
 
                     using (var db = new SmartHomeDbContext())
                     {
@@ -89,7 +90,7 @@ namespace SmatHome.Connector
                             Value = point.Value,
                             // Name = "C",
                             Name = point.Name,
-                            DateTime = DateTime.Now,
+                            DateTime = time,
                             DataId = dataId
                         };
                         db.Add(data);
@@ -109,7 +110,7 @@ namespace SmatHome.Connector
             Console.WriteLine(" [*] Start listening...");
 
             var connection = new HubConnectionBuilder()
-    .WithUrl("https://localhost:7138/hub") // Specify the URL of your SignalR hub
+    .WithUrl("http://192.168.3.21:5200/hub") // Specify the URL of your SignalR hub
     .Build();
 
             await connection.StartAsync();
@@ -118,7 +119,11 @@ namespace SmatHome.Connector
             var rabbitMqListener = new RabbitMQListener("amq.topic", "sensors_data");
             rabbitMqListener.StartListening(connection);
 
-            Console.ReadKey();
+            while (true)
+            {
+                await Task.Delay(1000); // Delay for 1 second before looping again
+            }
+            //Console.ReadKey();
         }
     }
 }

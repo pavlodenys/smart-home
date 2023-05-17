@@ -1,0 +1,29 @@
+version: "3.9"
+services:
+  smart-home-ui:
+    image: smarthomefrontend
+    build:
+      context: smart-home-ui
+      dockerfile: Dockerfile
+    environment: 
+      - backendUrl=http://backend
+    ports:
+      - "5173:5173"
+    depends_on: 
+      - smart-home-api
+  smart-home-connector:
+    image: smarthomeconnector
+    build:
+      context: smart-home-api
+      dockerfile: ./SmartHome.Connector/Dockerfile
+    depends_on: 
+      - smart-home-api      
+  smart-home-api:
+    image: smarthomebackend
+    build:
+      context: smart-home-api
+      dockerfile: ./SmartHome.Api/Dockerfile
+    ports:
+      - "5200:80"
+      - "7138:443"
+      - "1433:1433"

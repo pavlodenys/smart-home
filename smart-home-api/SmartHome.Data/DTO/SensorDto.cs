@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
-using SmartHome.Data.Entities;
-
-namespace SmartHome.Data.DTO
+﻿namespace SmartHome.Data.DTO
 {
-    public class ScenarioSensorDto {
+    public class ScenarioSensorDto
+    {
         public int ScenarioId { get; set; }
-       public int Id { get; set; }
+        public int Id { get; set; }
         public int SensorId { get; set; }
         public SensorDto? Sensor { get; set; }
-   }
+    }
     public class SensorDto
     {
         public int? Id { get; set; }

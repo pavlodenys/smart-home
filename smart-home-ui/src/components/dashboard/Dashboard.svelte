@@ -30,5 +30,5 @@
 </div>
 
 <style>
-  @import "../../app.css";
+  @import "../../styles.scss";
 </style>

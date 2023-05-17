@@ -18,6 +18,7 @@
     filterPoints,
     updateDataChart,
     getFirstPoint,
+    crateZoom,
   } from "./d3Utils";
 
   //TODO: add real-time update
@@ -26,7 +27,8 @@
   export let chartId;
 
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl("https://localhost:7138/hub", {
+    //.withUrl("https://localhost:7138/hub", {
+    .withUrl("http://localhost:5200/hub", {
       skipNegotiation: true,
       transport: signalR.HttpTransportType.WebSockets,
     }) // Specify the URL of your SignalR hub
@@ -42,13 +44,9 @@
     const allPoints = chart.data;
 
     connection.start().catch((err) => console.error(err));
-    function sendMessage(message) {
-      connection
-        .invoke("SendMessage", message)
-        .catch((err) => console.error(err));
-    }
+
     connection.on("ReceiveMessage", async (receivedMessage) => {
-      console.log(receivedMessage);
+      //console.log(receivedMessage);
       if (chart.id === receivedMessage.dataId) {
         allPoints.push(receivedMessage);
 
@@ -266,35 +264,9 @@
       // Call an API to load data for the new domain.
       // console.log(newXDomain);
     }
-
-    // d3.select(window).on("keydown", (event) => {
-    //   if (event.key === "ArrowLeft") {
-    //     // Shift chart data to the left
-    //     x.domain(x.domain().map((d) => new Date(d.getTime() - 1000)));
-    //   } else if (event.key === "ArrowRight") {
-    //     x.domain(x.domain().map((d) => new Date(d.getTime() + 1000)));
-    //   }
-
-    //   updateChart(svg, xAxis, valueLine, x, y);
-    // });
   });
 
-  const crateZoom = (width, height, xScale, yScale) => {
-    return d3
-      .zoom()
-      .scaleExtent([1, 100])
-      .translateExtent([
-        [0, 0],
-        [width, height],
-      ])
-      .on("zoom", (event) => {
-        const transform1 = event.transform;
 
-        //console.log(transform1);
-        xScale.domain(transform1.rescaleX(xScale).domain());
-        yScale.domain(transform1.rescaleY(yScale).domain());
-      });
-  };
 </script>
 
 <div>

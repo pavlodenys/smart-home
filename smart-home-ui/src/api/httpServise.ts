@@ -1,7 +1,8 @@
 import { push } from "svelte-spa-router";
 import { cleanJwtToken } from "./auth";
 
-const baseUrl = "https://localhost:7138/"; //TODO: Get from config
+//const baseUrl = "https://localhost:7138/"; //TODO: Get from config
+const baseUrl = import.meta.env.VITE_BASE_URL;
 const getConfig = (): HeadersInit => {
     const token = localStorage.getItem('accessToken');
     if (token) {

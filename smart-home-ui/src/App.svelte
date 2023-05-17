@@ -4,7 +4,7 @@
 
 
   import { getJwtToken, cleanJwtToken } from "./api/auth";
-  import "./app.css";
+  import "./styles.scss";
   import { redirect } from "./redirects";
   import { push } from "svelte-spa-router";
   import { routes } from "./routes";

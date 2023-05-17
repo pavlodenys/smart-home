@@ -20,10 +20,10 @@ namespace SmartHome.Api.Worker
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                
+
                 var scenarios = GetScenarios();
 
-                foreach(var scenario in scenarios)
+                foreach (var scenario in scenarios.ToList())
                 {
                     _queue.Enqueue(scenario);
                 }

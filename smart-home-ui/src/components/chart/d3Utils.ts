@@ -1,8 +1,7 @@
-import { onMount, createEventDispatcher } from "svelte";
-import type { ChartData, PointDto } from "../../types";
+
+import type { PointDto } from "../../types";
 import * as d3 from "d3";
 import moment from "moment";
-import * as signalR from "@microsoft/signalr";
 import { httpFetch } from "../../api/httpServise";
 
 let timeoutId;
@@ -10,8 +9,8 @@ let timeoutId;
 export const formatDate = (d) => moment(d).format("YYYY-MM-DD HH:mm:ss");
 
 export const createScales = (width, height, domainX, domainY) => {
-    var x = d3.scaleTime().domain(domainX).range([0, width]);
-    var y = d3.scaleLinear().domain(domainY).range([height, 0]);
+    const x = d3.scaleTime().domain(domainX).range([0, width]);
+    const y = d3.scaleLinear().domain(domainY).range([height, 0]);
     return { x, y };
 };
 
@@ -218,18 +217,6 @@ export const createDragger = (
     return drag;
 };
 
-// export const updateChart = (chartId, svg, xAxis, valueline, x, y) => {
-//     svg.select(".x.axis").call(xAxis);
-//     svg.select(".line").attr("d", valueline);
-
-//     const path = svg.select(".line").attr("d", valueline);
-//     const totalLength = path.node().getTotalLength();
-//     svg
-//         .selectAll(`.dot-${chartId}`)
-//         .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
-//         .attr("cy", (d) => y(d.value));
-// };
-
 export const filterPoints = async (points, date, chartId, chartIndex) => {
     let filtered = points.filter((point) => {
         const pointDate = new Date(point.dateTime);
@@ -361,4 +348,21 @@ export const updateDataChart = (
     } else {
         circles = createCircle(chartId, svg, data, margin, x, y);
     }
+};
+
+export const crateZoom = (width, height, xScale, yScale) => {
+    return d3
+        .zoom()
+        .scaleExtent([1, 100])
+        .translateExtent([
+            [0, 0],
+            [width, height],
+        ])
+        .on("zoom", (event) => {
+            const transform1 = event.transform;
+
+            //console.log(transform1);
+            xScale.domain(transform1.rescaleX(xScale).domain());
+            yScale.domain(transform1.rescaleY(yScale).domain());
+        });
 };

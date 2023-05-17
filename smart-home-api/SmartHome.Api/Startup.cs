@@ -16,6 +16,7 @@ using SmartHome.Api.Utilities;
 using SmartHome.Api.Worker;
 using Microsoft.AspNetCore.SignalR;
 using SmartHome.Api.Hubs;
+using System.Diagnostics;
 
 namespace SmartHome.Api
 {
@@ -50,8 +51,8 @@ namespace SmartHome.Api
 
             services.AddSingleton<ScenariosQueue>();
 
-            services.AddHostedService<ScenarioConsumer>();
-            services.AddHostedService<ScenarioProducer>();
+            //services.AddHostedService<ScenarioConsumer>();
+            //wservices.AddHostedService<ScenarioProducer>();
 
             services.AddAutoMapper(typeof(SensorProfile));
 
@@ -132,32 +133,36 @@ namespace SmartHome.Api
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
+
+            Debug.WriteLine("Configuration.....Startup1");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             // var context = app.ApplicationServices.GetRequiredService<Context>();
-            app.UseCors(builder => builder
-     .AllowAnyOrigin()
-     .AllowAnyMethod()
-     .AllowAnyHeader());
+            app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
-            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
-            {
-                var context = serviceScope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
+            //using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            //{
+            //    var context = serviceScope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
 
-                if (context.Database.EnsureCreated())
-                {
-                    context.Database.Migrate();
-                }
-            }
+            //    if (context.Database.EnsureCreated())
+            //    {
+            //        context.Database.Migrate();
+            //    }
+            //}
 
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            Debug.WriteLine("Configuration.....Startup2");
+
+            // app.UseHttpsRedirection();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "backend v1"));
 
             app.UseRouting();
             app.UseAuthentication();

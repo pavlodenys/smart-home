@@ -6,10 +6,13 @@ namespace SmartHome.Data
 {
     public class SmartHomeDbContext : DbContext
     {
-        private readonly string _connectionString = "Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True";
+       // private readonly string _connectionString = "Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True";
 
-        public SmartHomeDbContext() => new SmartHomeDbContext("Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True");
+        private readonly string _connectionString = "Server=192.168.3.21,1433;Database=SmartHouse;User Id=dockerASP;Password=Rabbitball23;TrustServerCertificate=True";
 
+       // public SmartHomeDbContext() => new SmartHomeDbContext("Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True");
+
+        public SmartHomeDbContext() => new SmartHomeDbContext("Server=192.168.3.21,1433;Database=SmartHouse;User Id=dockerASP;Password=Rabbitball23;TrustServerCertificate=True");
 
         public SmartHomeDbContext(string connectionString) {
             _connectionString = connectionString;

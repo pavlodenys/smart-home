@@ -6,8 +6,10 @@ export let devices: DeviceData[] = [];
 
 </script>
 
+<div class="flex">
+ <h2>Devices</h2>
 <div class="devices-container">
-  <h2>Devices</h2>
+ 
   {#each devices as device}
     <div class="device">
       <h3>{device.name}</h3>
@@ -16,6 +18,8 @@ export let devices: DeviceData[] = [];
     </div>
   {/each}
 </div>
+</div>
+
 
 <style>
   @import "./Devices.scss";

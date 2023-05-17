@@ -1,0 +1,40 @@
+# Use the official ASP.NET Core runtime as the base image
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
+WORKDIR /smart-home-api/SmartHome.Api
+EXPOSE 7138
+
+# Use the official .NET Core SDK as the build image
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
+WORKDIR /smart-home-api/SmartHome.Connector
+
+# Copy the .csproj files and restore dependencies
+COPY *.csproj .
+RUN dotnet restore
+
+# Copy the source code and build the ASP.NET Core application
+COPY . .
+RUN dotnet build -c Release -o /smart-home-api/SmartHome.Api
+
+# Publish the ASP.NET Core application
+FROM build AS publish
+RUN dotnet publish -c Release -o /smart-home-api/SmartHome.Api
+
+# Build the final runtime image for the ASP.NET Core application
+FROM base AS final
+WORKDIR /smart-home-api/SmartHome.Api
+COPY --from=publish /smart-home-api/SmartHome.Api.
+
+# Build the Svelte app
+FROM node:14 AS svelte
+WORKDIR /smart-home-ui
+COPY package*.json ./
+RUN npm install
+COPY svelte-app .
+RUN npm run build
+
+# Merge the ASP.NET Core and Svelte app images
+FROM base AS merged
+WORKDIR /smart-home-api/SmartHome.Api
+COPY --from=svelte /smart-home-api/SmartHome.Api/public ./wwwroot
+
+ENTRYPOINT ["dotnet", "SmartHome.Api.dll"]

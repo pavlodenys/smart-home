@@ -1,7 +1,6 @@
 <script lang="ts">
   import {link} from 'svelte-spa-router';
   import type { SensorData } from "../../types";
-  import Chart from "../chart/Chart.svelte";
   import { httpFetch } from '../../api/httpServise';
 
   export let sensor: SensorData;

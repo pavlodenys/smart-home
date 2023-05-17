@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore;
+using System.Diagnostics;
 
 namespace SmartHome.Api
 {
@@ -8,7 +9,7 @@ namespace SmartHome.Api
         {
 
             Console.WriteLine("API starts.");
-
+            Activity.DefaultIdFormat = ActivityIdFormat.W3C;
             CreateHostBuilder(args)
                 .Build()
                 .Run();
