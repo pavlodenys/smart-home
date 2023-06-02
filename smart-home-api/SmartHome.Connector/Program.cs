@@ -6,6 +6,7 @@ using SmartHome.Data;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 using SmartHome.Logic;
+using System;
 using System.Text;
 using System.Threading.Channels;
 
@@ -52,7 +53,7 @@ namespace SmatHome.Connector
             _exchangeName = exchangeName;
             _queueName = queueName;
 
-           /// var factory = new ConnectionFactory() { HostName = "localhost", UserName = "rmuser", Password = "rmpassword" };
+            /// var factory = new ConnectionFactory() { HostName = "localhost", UserName = "rmuser", Password = "rmpassword" };
             var factory = new ConnectionFactory() { HostName = "192.168.3.21", UserName = "rmuser", Password = "rmpassword" };
             _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
@@ -62,7 +63,7 @@ namespace SmatHome.Connector
             _channel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _queueName);
         }
 
-        public void StartListening(HubConnection connection)
+        public void StartListening(HubConnection connection, string connectionString)
         {
             var consumer = new EventingBasicConsumer(_channel);
             consumer.ConsumerCancelled += (model, ea) =>
@@ -75,9 +76,21 @@ namespace SmatHome.Connector
                 var message = Encoding.UTF8.GetString(body);
                 // process message and save to database
 
-                var time = ea.BasicProperties.IsTimestampPresent() ? DateTime.FromFileTimeUtc(ea.BasicProperties.Timestamp.UnixTime) : DateTime.Now;
+
                 // todo: parse time
                 var point = JsonConvert.DeserializeObject<PointDto>(message);
+
+                DateTime? dateTime = null;
+
+                if (point.Time != 0)
+                {
+                    var unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    TimeSpan utcOffset = TimeSpan.FromHours(3); // UTC+3
+
+                    dateTime = unixEpoch.AddSeconds(point.Time).Add(utcOffset);
+                }
+
+                DateTime time = ea.BasicProperties.IsTimestampPresent() ? DateTime.FromFileTimeUtc(ea.BasicProperties.Timestamp.UnixTime) : dateTime != null ? dateTime.Value : DateTime.Now;
 
                 if (point != null)
                 {
@@ -105,19 +118,55 @@ namespace SmatHome.Connector
     }
     class Program
     {
+        private const string Url = "http://localhost:5200/hub";
+        //private const string Url = "http://192.168.3.21:5200/hub";
+
+        private static HubConnection? connection;
+
         static async Task Main(string[] args)
         {
             Console.WriteLine(" [*] Start listening...");
 
-            var connection = new HubConnectionBuilder()
-    .WithUrl("http://192.168.3.21:5200/hub") // Specify the URL of your SignalR hub
-    .Build();
+            //string connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
 
-            await connection.StartAsync();
+            //if (string.IsNullOrEmpty(connectionString))
+            //{
+            //    Console.WriteLine("Connection string not provided.");
+            //    return;
+            //}
+
+            int attempts = 0;
+            int maxAttemps = 5;
+            while (attempts < maxAttemps)
+            {
+                try
+                {
+                    // Specify the URL of your SignalR hub
+                    connection = new HubConnectionBuilder().WithUrl(Url).Build();
+                    await connection.StartAsync();
+                    break;
+                }
+                catch (HttpRequestException e)
+                {
+                    Console.WriteLine($"{e.Message}");
+                    Console.WriteLine($"Attept N:");
+                    attempts++;
+                    await Task.Delay(1000);
+                }
+            }
+
+            if (connection is null)
+            {
+                Console.WriteLine($"Could not establish connection");
+                Console.ReadKey();
+                return;
+            }
+
+
             Console.WriteLine($" [*] Signalr state = {connection.State}");
 
             var rabbitMqListener = new RabbitMQListener("amq.topic", "sensors_data");
-            rabbitMqListener.StartListening(connection);
+            rabbitMqListener.StartListening(connection, "");
 
             while (true)
             {

@@ -2,16 +2,15 @@
   import { onMount } from "svelte";
   import Chart from "../chart/Chart.svelte";
   import { httpFetch } from "../../api/httpServise";
-  import { location } from "svelte-spa-router";
-  import type { ChartData, SensorData } from "../../types";
+  import type { SensorData } from "../../types";
   import moment from "moment";
 
-  const getInitialChartData = () => {
+  const getInitialChartData = (id) => {
     return {
       // id: "",
-      name: "",
+      name: `Sensor ${id}`,
       type: "",
-      description: "",
+      description: `Sensor ${id} data`,
     };
   };
 
@@ -23,15 +22,16 @@
     chartData: [],
   };
   let showNewData = false;
-  let newChartData = getInitialChartData();
+  //let newChartData = getInitialChartData();
+  let newChartDataArray = [];
   let page = 0;
   let count = 50;
   export let params = null;
 
   onMount(async () => {
     if (params?.id) {
-      let date = moment().format('YYYY-MM-DD');
-      sensor = await httpFetch.get(`api/home/sensors/${params.id}/${date}`);
+      let date = moment().format("YYYY-MM-DD");
+      sensor = await httpFetch.get(`api/sensor/${params.id}/${date}`);
     } else {
       sensor = {
         //id: "",
@@ -55,7 +55,11 @@
 
   const connectToData = () => {
     showNewData = true;
-    newChartData = getInitialChartData();
+
+    newChartDataArray = [
+      ...newChartDataArray,
+      getInitialChartData(newChartDataArray.length + 1),
+    ];
   };
 
   const saveSensor = async () => {
@@ -80,29 +84,31 @@
       sensor.chartData = [];
     }
 
-    sensor.chartData = [...sensor.chartData, newChartData];
+    sensor.chartData = [...sensor.chartData, ...newChartDataArray];
 
     cancelConnect();
   };
 </script>
 
-<div class="sensor-title">
-  <label for="name-input">Name:</label>
-  <input type="text" id="name-input" bind:value={sensor.name} />
-</div>
+<div class="sensor-setup">
+  <div class="sensor-title">
+    <label for="name-input">Name:</label>
+    <input type="text" id="name-input" bind:value={sensor.name} />
+  </div>
 
-<div class="sensor-info">
-  <label for="description-input">Description:</label>
-  <textarea id="description-input" bind:value={sensor.description} />
-</div>
+  <div class="sensor-info">
+    <label for="description-input">Description:</label>
+    <textarea id="description-input" bind:value={sensor.description} />
+  </div>
 
-<div class="sensor-info">
-  <label for="type-input">Type:</label>
-  <input type="text" id="type-input" bind:value={sensor.type} />
-</div>
+  <div class="sensor-info">
+    <label for="type-input">Type:</label>
+    <input type="text" id="type-input" bind:value={sensor.type} />
+  </div>
 
-<button on:click={connectToData}>+ Connect Data</button>
-<button on:click={saveSensor}>Save</button>
+  <button on:click={connectToData}>+ Connect Data</button>
+  <button on:click={saveSensor}>Save</button>
+</div>
 
 {#if sensor?.chartData}
   {#each sensor.chartData as data, index}
@@ -112,34 +118,47 @@
   No data available
 {/if}
 
-{#if showNewData}
-  <form>
-    <label>
-      Name:
-      <input type="text" bind:value={newChartData.name} />
-    </label>
+<div class="new-data">
+  {#if showNewData}
+    {#each newChartDataArray as newChartData}
+      <form>
+        <label>
+          Name:
+          <input type="text" bind:value={newChartData.name} />
+        </label>
 
-    <label>
-      Description:
-      <textarea bind:value={newChartData.description} />
-    </label>
+        <label>
+          Description:
+          <textarea bind:value={newChartData.description} />
+        </label>
 
-    <label>
-      Type:
-      <select bind:value={newChartData.type}>
-        <option value="">-- Select Type --</option>
-        <option value="Bar">Bar</option>
-        <option value="Line">Line</option>
-        <option value="Pie">Pie</option>
-      </select>
-    </label>
+        <label>
+          Type:
+          <select bind:value={newChartData.type}>
+            <option value="">-- Select Type --</option>
+            <option value="Bar">Bar</option>
+            <option value="Line">Line</option>
+            <option value="Pie">Pie</option>
+          </select>
+        </label>
 
-    <button type="submit" on:click={saveDataSource}>Submit</button>
-    <button on:click={cancelConnect}>Cancel</button>
-  </form>
-{/if}
+        <button type="submit" on:click={saveDataSource}>Submit</button>
+        <button on:click={cancelConnect}>Cancel</button>
+      </form>
+    {/each}
+  {/if}
+</div>
 
 <style>
+  .sensor-setup {
+    display: flex;
+    flex-direction: column;
+        max-width: 40%;
+    min-width: 20rem;
+  }
+  .new-data {
+    display: flex;
+  }
   .sensor-title {
     display: flex;
     align-items: center;
@@ -200,6 +219,9 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
+
+    padding: 1rem;
+    margin: 1rem;
   }
 
   form label {
@@ -229,12 +251,12 @@
     background-color: #3e8e41;
   }
 
-  form button[type="button"] {
+  /* form button[type="button"] {
     background-color: #f44336;
     border: none;
     color: white;
     padding: 0.5rem 1rem;
-  }
+  } */
 
   /* .sensor-title {
     font-size: 1.5rem;

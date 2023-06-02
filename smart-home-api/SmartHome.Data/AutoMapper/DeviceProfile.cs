@@ -8,29 +8,48 @@ namespace SmartHome.Data.AutoMapper
     {
         public DeviceProfile()
         {
-            CreateMap<Device, DeviceDto>()
-                          .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
+            CreateMap<Device, DeviceDto>();
+            CreateMap<DeviceDto, Device>();
+            CreateMap<ScenarioDeviceDto, ScenarioDevice>();
+            CreateMap<ScenarioDevice, ScenarioDeviceDto>();
+            CreateMap<ScenarioDto, Scenario>();
+            CreateMap<Scenario, ScenarioDto>();
+            CreateMap<ScenarioSensorDto, ScenarioSensor>();
+            CreateMap<ScenarioSensor, ScenarioSensorDto>();
+            CreateMap<Point, PointDto>();
+            CreateMap<PointDto, Point>();
+            CreateMap<HomeUser, HomeUserDto>();
+            CreateMap<HomeUserDto, HomeUser>();
+            CreateMap<RefreshToken, RefreshTokenDto>();
+            CreateMap<RefreshTokenDto, RefreshToken>();
+
+            CreateMap<Sensor, SensorDto>()
+        .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
+        .ForMember(dto => dto.Name, opt => opt.MapFrom(entity => entity.Name))
+        .ForMember(dto => dto.Description, opt => opt.MapFrom(entity => entity.Description))
+        .ForMember(dto => dto.Type, opt => opt.MapFrom(entity => entity.Type))
+        .ForMember(dto => dto.ChartData, opt => opt.MapFrom(entity => entity.Data));
+
+            CreateMap<SensorDto, Sensor>()
+               .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
                .ForMember(dto => dto.Name, opt => opt.MapFrom(entity => entity.Name))
                .ForMember(dto => dto.Description, opt => opt.MapFrom(entity => entity.Description))
-               .ForMember(dto => dto.IsActive, opt => opt.MapFrom(entity => entity.IsActive));
+               .ForMember(dto => dto.Type, opt => opt.MapFrom(entity => entity.Type))
+               .ForMember(dto => dto.Data, opt => opt.MapFrom(entity => entity.ChartData));
 
-            CreateMap<DeviceDto, Device>()
-                       .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
+
+
+            CreateMap<Entities.Data, ChartDataDto>()
+            .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
+               .ForMember(dto => dto.Name, opt => opt.MapFrom(entity => entity.Name))
+               .ForMember(dto => dto.Data, opt => opt.MapFrom(entity => entity.Points))
+               .ForMember(dto => dto.Description, opt => opt.MapFrom(entity => entity.Description));
+
+            CreateMap<ChartDataDto, Entities.Data>()
+         .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
             .ForMember(dto => dto.Name, opt => opt.MapFrom(entity => entity.Name))
-            .ForMember(dto => dto.Description, opt => opt.MapFrom(entity => entity.Description))
-            .ForMember(dto => dto.IsActive, opt => opt.MapFrom(entity => entity.IsActive));
-
-            CreateMap<ScenarioDeviceDto, ScenarioDevice>()
-                       .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
-            .ForMember(dto => dto.ScenarioId, opt => opt.MapFrom(entity => entity.ScenarioId))
-            .ForMember(dto => dto.DeviceId, opt => opt.MapFrom(entity => entity.DeviceId))
-            .ForMember(dto => dto.Device, opt => opt.MapFrom(entity => entity.Device));
-
-            CreateMap<ScenarioDevice, ScenarioDeviceDto>()
-                 .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
-      .ForMember(dto => dto.ScenarioId, opt => opt.MapFrom(entity => entity.ScenarioId))
-      .ForMember(dto => dto.DeviceId, opt => opt.MapFrom(entity => entity.DeviceId))
-      .ForMember(dto => dto.Device, opt => opt.MapFrom(entity => entity.Device));
+            .ForMember(dto => dto.Points, opt => opt.MapFrom(entity => entity.Data))
+            .ForMember(dto => dto.Description, opt => opt.MapFrom(entity => entity.Description));
         }
     }
 }

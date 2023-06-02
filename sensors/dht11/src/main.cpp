@@ -3,6 +3,7 @@
 // - connect ESP to Windows 10(need to install proper driver)
 // - baund - 9600
 
+#include <SPI.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <Adafruit_Sensor.h>
@@ -10,6 +11,8 @@
 #include <DHT_U.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include "RTClib.h"
+#include <TimeLib.h>
 
 #define DHTTYPE DHT11
 
@@ -17,13 +20,15 @@ struct Point
 {
   int Id;
   float Value;
+  time_t Time;
 };
+//const DateTime &dt;
 
-//const char *ssid = "Nexty"; // Enter SSID here
+// const char *ssid = "Nexty"; // Enter SSID here
 const char *ssid = "Potter"; // Enter SSID here
 const char *password = "04041992";
 
-//const char *broker = "192.168.0.151";
+// const char *broker = "192.168.0.151";
 const char *broker = "192.168.3.21";
 const int port = 1883;
 
@@ -65,10 +70,20 @@ void setup()
     delay(1000);
     Serial.print(".");
   }
+
   Serial.println("");
   Serial.println("WiFi connected..!");
   Serial.print("Got IP: ");
   Serial.println(WiFi.localIP());
+
+  configTime(0, 0, "pool.ntp.org"); // Set NTP time server
+
+  Serial.println("Waiting for NTP time sync...");
+  while (!time(nullptr))
+  {
+    delay(1000);
+    Serial.println("Waiting for NTP time sync...");
+  }
 
   client.setServer(broker, port);
   client.setCallback(callback);
@@ -86,6 +101,7 @@ void loop()
     delay(20000);
     float h = dht.readHumidity();
     float t = dht.readTemperature();
+   // int time_now = dt.unixtime();
 
     if (isnan(h) || isnan(t))
     {
@@ -93,14 +109,24 @@ void loop()
       return;
     }
 
+    time_t now = time(nullptr); // Get current time
+    char timeVal[17];
+    strcpy(timeVal, ctime(&now));
+    Serial.println(ctime(&now)); // Print current date and time
+
     char tempVal[17];
     char humVal[17];
+  
 
     sprintf_P(tempVal, "%f", t);
     sprintf_P(humVal, "%f", h);
+    //sprintf_P(timeVal, "%i", now);
 
-    Point temperature = {2, t};
-    Point humidity = {3, h};
+    Point temperature = {
+        2,
+        t,
+        now};
+    Point humidity = {3, h, now};
 
     StaticJsonDocument<128> docT;
     StaticJsonDocument<128> docH;
@@ -110,6 +136,9 @@ void loop()
     docT["Name"] = "C";
     docT["Value"] = temperature.Value;
     docH["Value"] = humidity.Value;
+
+    docT["Time"] = temperature.Time;
+    docH["Time"] = humidity.Time;
     char jsonT[128];
     char jsonH[128];
     serializeJson(docT, jsonT);

@@ -12,10 +12,10 @@
   let devices: DeviceData[] = [];
 
   onMount(async () => {
-    const response = await httpFetch.get('api/home/sensors')
+    const response = await httpFetch.get('api/sensor')
     sensors = response;
 
-    const responseDevices = await httpFetch.get('api/home/device');
+    const responseDevices = await httpFetch.get('api/device');
     devices = responseDevices;
   });
 </script>

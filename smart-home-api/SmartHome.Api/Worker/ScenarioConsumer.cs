@@ -1,10 +1,6 @@
 ﻿using SmartHome.Api.Utilities;
-using SmartHome.Core.Enums;
 using SmartHome.Data.DTO;
-using SmartHome.Data.Entities;
 using SmartHome.Logic;
-using System.Diagnostics;
-using System.Drawing;
 
 namespace SmartHome.Api.Worker
 {
@@ -29,7 +25,7 @@ namespace SmartHome.Api.Worker
                     ProcessScenario(scenario);
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken); // Delay for 1 second
+                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken); // Delay for 10 second
             }
         }
         private void ProcessScenario(ScenarioDto? scenario)

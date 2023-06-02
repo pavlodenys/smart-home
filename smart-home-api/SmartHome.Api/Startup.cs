@@ -1,22 +1,15 @@
 ﻿using SmartHome.Data;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SmartHome.Logic;
 using SmartHome.Data.AutoMapper;
 using SmartHome.Data.Entities;
-using SmartHome.Data.DTO;
-using Newtonsoft;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using SmartHome.Api.Utilities;
-using SmartHome.Api.Worker;
-using Microsoft.AspNetCore.SignalR;
 using SmartHome.Api.Hubs;
 using System.Diagnostics;
+using SmartHome.Api.Worker;
 
 namespace SmartHome.Api
 {
@@ -39,22 +32,32 @@ namespace SmartHome.Api
             //        .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddTransient<SmartHomeDbContext>();
-            services.AddSingleton(typeof(IRepository<Sensor, SensorDto>), typeof(Repository<Sensor, SensorDto>));
-            services.AddSingleton(typeof(IRepository<Device, DeviceDto>), typeof(Repository<Device, DeviceDto>));
-            services.AddSingleton(typeof(IRepository<Scenario, ScenarioDto>), typeof(Repository<Scenario, ScenarioDto>));
-            services.AddSingleton(typeof(IRepository<Point, PointDto>), typeof(Repository<Point, PointDto>));
-            services.AddSingleton(typeof(IRepository<HomeUser, HomeUserDto>), typeof(Repository<HomeUser, HomeUserDto>));
-            services.AddSingleton(typeof(IRepository<RefreshToken, RefreshTokenDto>), typeof(Repository<RefreshToken, RefreshTokenDto>));
+
+            //Entity classes and Dto classes names should starts from common world. Othewise, you will add a lot of code.
+            var typeEntity = typeof(DataAssembly).Assembly.GetTypes()
+                .Where(x => x.FullName != null && x.FullName.Contains("Entities") && !x.IsAbstract && !x.IsInterface)
+                .ToList();
+
+            foreach (var typeDto in typeof(DataAssembly).Assembly.GetTypes().Where(x => x.Name.EndsWith("Dto") && !x.IsAbstract && !x.IsInterface))
+            {
+                var entityClass = typeEntity.FirstOrDefault(et => typeDto.Name.StartsWith(et.Name));
+                if (entityClass == null) continue;
+
+                var repositoryType = typeof(Repository<,>).MakeGenericType(entityClass, typeDto);
+                var repositoryInterface = typeof(IRepository<,>).MakeGenericType(entityClass,typeDto);
+
+                services.AddSingleton(repositoryInterface, repositoryType);
+            }
 
             services.AddSingleton<ScenarioService>();
             services.AddSingleton<Services>();
 
             services.AddSingleton<ScenariosQueue>();
 
-            //services.AddHostedService<ScenarioConsumer>();
-            //wservices.AddHostedService<ScenarioProducer>();
+            services.AddHostedService<ScenarioConsumer>();
+            services.AddHostedService<ScenarioProducer>();
 
-            services.AddAutoMapper(typeof(SensorProfile));
+            services.AddAutoMapper(typeof(DeviceProfile));
 
             services.AddIdentityCore<HomeUser>((setup) =>
             {

@@ -1,4 +1,5 @@
-﻿using SmartHome.Data;
+﻿using Microsoft.Extensions.Configuration;
+using SmartHome.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace SmartHome.Logic
     {
         public static SmartHomeDbContext GetContext()
         {
+           // string connectionString = Environment.GetEnvironmentVariable("DefaultConnection");
+
             var dataContext = new SmartHomeDbContext();
 
             return dataContext;
