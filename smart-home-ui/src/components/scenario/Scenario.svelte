@@ -31,20 +31,14 @@
   };
 
   const saveScenario = async () => {
-    const response = await fetch("https://localhost:7138/api/home/scenario", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const response = await httpFetch.post('api/scenario', {
         sensors: [{sensorId:selectedSensor}],
         devices: [{deviceId:selectedDevice}],
         value: inputValue,
         operator: selectedOperator,
         command: commandValue
-      }),
-    });
-    sensors = await response.json();
+      });
+    sensors = response;
   };
 
   onMount(async () => {

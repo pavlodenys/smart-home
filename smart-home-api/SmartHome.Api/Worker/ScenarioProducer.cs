@@ -1,4 +1,5 @@
 ﻿using SmartHome.Api.Utilities;
+using SmartHome.Core.Extensions;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 using SmartHome.Logic;
@@ -21,20 +22,20 @@ namespace SmartHome.Api.Worker
             while (!stoppingToken.IsCancellationRequested)
             {
 
-                var scenarios = GetScenarios();
+                var scenarios = (await GetScenarios()).NotDeleted();
 
                 foreach (var scenario in scenarios.ToList())
                 {
-                    _queue.Enqueue(scenario);
+                    _queue.Enqueue(scenario as ScenarioDto);
                 }
 
                 await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken); // Delay for 1 minute
             }
         }
 
-        private IEnumerable<ScenarioDto> GetScenarios()
+        private async Task<IEnumerable<ScenarioDto>> GetScenarios()
         {
-            return _scenarioService.GetScenarios();
+            return await _scenarioService.GetScenarios();
         }
     }
 }

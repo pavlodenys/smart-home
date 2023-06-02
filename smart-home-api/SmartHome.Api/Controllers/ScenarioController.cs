@@ -13,10 +13,12 @@ namespace SmartHome.Api.Controllers
     public class ScenarioController : ControllerBase
     {
         private IRepository<Scenario, ScenarioDto> _scenarioRepo { get; set; }
+        private ScenarioService _service { get; set; }
 
-        public ScenarioController(IRepository<Scenario, ScenarioDto> scenarioRepo)
+        public ScenarioController(IRepository<Scenario, ScenarioDto> scenarioRepo, ScenarioService service)
         {
             _scenarioRepo = scenarioRepo;
+            _service = service;
         }
 
         [HttpPost]
@@ -32,8 +34,8 @@ namespace SmartHome.Api.Controllers
         [Route("")]
         public async Task<IActionResult> GetScenarious()
         {
-            var scenarious = _scenarioRepo.GetAll();
-            return base.Ok(await scenarious.ToListAsync());
+            var scenarious = await _scenarioRepo.GetAll();
+            return base.Ok(scenarious);
         }
 
         [HttpGet]
@@ -41,6 +43,14 @@ namespace SmartHome.Api.Controllers
         public IActionResult GetScenario(int id)
         {
             return Ok(_scenarioRepo.GetById(id));
+        }
+
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> DeleteScenario(int id)
+        {
+            var deleteResult = await _service.DeleteScenario(id);
+            return Ok(deleteResult);
         }
     }
 }

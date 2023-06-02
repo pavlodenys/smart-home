@@ -29,9 +29,9 @@ namespace SmartHome.Api.Controllers
 
         [HttpGet]
         [Route("")]
-        public IActionResult GetAllDevices()
+        public async Task<IActionResult> GetAllDevices()
         {
-            var devices = _devicesRepo.GetAll();
+            var devices = await _devicesRepo.GetAll();
 
             return Ok(devices);
         }

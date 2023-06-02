@@ -2,22 +2,23 @@
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
+using SmartHome.Core;
+using SmartHome.Core.Extensions;
 using SmartHome.Data;
-using SmartHome.Data.DTO;
-using SmartHome.Data.Entities;
 using System.Linq.Expressions;
-using System.Security.Cryptography;
 
 namespace SmartHome.Logic
 {
     public interface IRepository
     {
-
+        SmartHomeDbContext _dbContext { get; set; }
     }
     public interface IRepository<TEntity,TDto> : IRepository where TEntity : class
     {
-        IQueryable<TDto> GetAll();
-        IQueryable<TDto> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0);
+        Task<IEnumerable<TDto>> GetAll();
+        Task<IEnumerable<TDto>> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0);
+        //IQueryable<TDto> GetAll();
+        // IQueryable<TDto> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0);
         TDto GetDtoById(int id);
         TEntity? GetById(int id);
         Task<TDto> GetById(Expression<Func<TEntity, bool>> condition, Func<IQueryable<TEntity>, IIncludableQueryable<TEntity, object>>? include = null);
@@ -28,11 +29,18 @@ namespace SmartHome.Logic
 
        // TDto UpdateDto(int id, TDto dto);
         Task<int> Delete(TEntity entity);
-        Task<int> Delete(int id);
+        /// <summary>
+        /// Delete 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+       // Task<int> Delete(int id); // todo: implement it
     }
-    public class Repository<TEntity, TDto> : IRepository<TEntity, TDto> where TEntity : class
+    public class Repository<TEntity, TDto> : IRepository<TEntity, TDto> 
+        where TEntity : class 
+        where TDto : class
     {
-        private SmartHomeDbContext _dbContext { get; set; }
+        public SmartHomeDbContext _dbContext { get; set; } // todo: make it private back
 
         private DbSet<TEntity> _set;
         private readonly IMapper _mapper;
@@ -101,18 +109,49 @@ namespace SmartHome.Logic
             return rowsDeleted;
         }
 
-        public IQueryable<TDto> GetAll()
+        //public IQueryable<TDto> GetAll()
+        //{
+        //    var dtos = _set.ProjectTo<TDto>(_mapper.ConfigurationProvider);
+
+        //    if (((System.Reflection.TypeInfo)typeof(TDto)).ImplementedInterfaces != null && ((System.Reflection.TypeInfo)typeof(TDto)).ImplementedInterfaces.Any(x => x.Name.Contains(nameof(IDeleted))))
+        //    {
+        //        dtos = dtos.AsEnumerable().NotDeleted().AsQueryable();
+        //    }
+
+        //    return dtos;
+        //}
+
+        public async Task<IEnumerable<TDto>> GetAll()
         {
-            return _set.ProjectTo<TDto>(_mapper.ConfigurationProvider);
+            var query = _set.Where(_ => true);
+
+            var dtos = query.ProjectTo<TDto>(_mapper.ConfigurationProvider);
+
+            if (typeof(TDto).GetInterfaces().Contains(typeof(IDeleted)))
+            {
+                return dtos.NotDeleted();
+            }
+
+            return dtos;
         }
 
-        public IQueryable<TDto> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0)
+        public async Task<IEnumerable<TDto>> GetAll(Expression<Func<TEntity, bool>> condition, int page = 0, int count = 0)
         {
+            var query = _set.Where(condition);
+
             if (page > 0 && count != 0)
             {
-                return _set.Where(condition).Skip(page * count).Take(count).ProjectTo<TDto>(_mapper.ConfigurationProvider);
+                query = query.Skip(page * count).Take(count);
             }
-            return _set.Where(condition).ProjectTo<TDto>(_mapper.ConfigurationProvider);
+
+            var dtos = query.ProjectTo<TDto>(_mapper.ConfigurationProvider);
+
+            if (typeof(TDto).GetInterfaces().Contains(typeof(IDeleted)))
+            {
+                return dtos.NotDeleted();
+            }
+
+            return dtos;
         }
 
         public TEntity? Update(int id, TDto dto)
@@ -128,6 +167,16 @@ namespace SmartHome.Logic
             return entity;
         }
 
+        //Task<IEnumerable<TDto>> IRepository<TEntity, TDto>.GetAll()
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //Task<IEnumerable<TDto>> IRepository<TEntity, TDto>.GetAll(Expression<Func<TEntity, bool>> condition, int page, int count)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
         //public TDto UpdateDto(int id, TDto dto)
         //{
         //    var entity = Update(id, dto);
@@ -135,9 +184,11 @@ namespace SmartHome.Logic
         //    return _mapper.Map<TDto>(entity);
         //}
 
-        public Task<int> Delete(int id)
-        {
-            throw new NotImplementedException();
-        }
+        //public Task<int> Delete(int id)
+        //{
+        //    var entity = GetById(id);
+
+        //    entity.
+        //}
     }
 }

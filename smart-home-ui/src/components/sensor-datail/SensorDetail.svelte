@@ -106,8 +106,10 @@
     <input type="text" id="type-input" bind:value={sensor.type} />
   </div>
 
-  <button on:click={connectToData}>+ Connect Data</button>
+ <div class="d-flex">
+   <button on:click={connectToData}>+ Connect Data</button>
   <button on:click={saveSensor}>Save</button>
+ </div>
 </div>
 
 {#if sensor?.chartData}
@@ -150,10 +152,14 @@
 </div>
 
 <style>
+  .d-flex {
+    display: flex;
+    justify-content: space-between;
+  }
   .sensor-setup {
     display: flex;
     flex-direction: column;
-        max-width: 40%;
+    max-width: 40%;
     min-width: 20rem;
   }
   .new-data {

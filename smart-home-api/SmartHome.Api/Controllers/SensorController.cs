@@ -36,11 +36,11 @@ namespace SmartHome.Api.Controllers
         [HttpGet]
         [Route("")]
         //[Authorize]
-        public IActionResult GetSensors()
+        public async Task<IActionResult> GetSensors()
         {
             var user = HttpContext.User.FindFirst(ClaimTypes.Email)?.Value;
 
-            var sensors = _repo.GetAll();
+            var sensors = await _repo.GetAll();
 
             _logger.Log(LogLevel.Information, "Get Sensors Data");
 
@@ -66,9 +66,9 @@ namespace SmartHome.Api.Controllers
         [HttpGet]
         [Route("{id}/data/{page}/{count}")]
         //[Authorize]
-        public IActionResult GetSensorData(int id, int page, int count)
+        public async Task<IActionResult> GetSensorData(int id, int page, int count)
         {
-            var sensorData = _pointsRepo.GetAll(b => b.DataId == id, page, count);
+            var sensorData = await _pointsRepo.GetAll(b => b.DataId == id, page, count);
 
             _logger.Log(LogLevel.Information, "Get Sensors Data");
 

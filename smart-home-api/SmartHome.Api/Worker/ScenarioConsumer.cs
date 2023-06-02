@@ -25,12 +25,12 @@ namespace SmartHome.Api.Worker
                     ProcessScenario(scenario);
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken); // Delay for 10 second
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken); // Delay for 10 second
             }
         }
         private void ProcessScenario(ScenarioDto? scenario)
         {
-            if (scenario != null && scenario.Devices != null)
+            if (scenario != null && scenario.Devices != null && !scenario.IsDeleted)
             {
                 var scenarioDevice = scenario.Devices.FirstOrDefault();
                 if (scenarioDevice != null && scenario.Sensors != null)
@@ -40,7 +40,7 @@ namespace SmartHome.Api.Worker
                         var charData = sensor.Sensor?.ChartData.ElementAt(0);
                         if (charData != null)
                         {
-                            var freshSensorData = charData.Data?.Where(x => x.DateTime > DateTime.Now.AddMinutes(-1));
+                            var freshSensorData = charData.Data?.Where(x => x.DateTime > DateTime.Now.AddMinutes(-1)).ToList();
                             var result = _service.CheckScenario(scenarioDevice.Device, scenario.Operator, freshSensorData, scenario.SensorValue);
                         }
                     }

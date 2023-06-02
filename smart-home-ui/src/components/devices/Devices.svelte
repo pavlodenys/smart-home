@@ -14,7 +14,7 @@ export let devices: DeviceData[] = [];
     <div class="device">
       <h3>{device.name}</h3>
       <p>ID: {device.id}</p>
-      <p>Status: {device.status}</p>
+      <p>Status: {device.isActive}</p>
     </div>
   {/each}
 </div>

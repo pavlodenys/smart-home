@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Configuration;
 using SmartHome.Data.Entities;
 
@@ -29,6 +30,19 @@ namespace SmartHome.Data
         {
             optionsBuilder.UseSqlServer(_connectionString);
         }
+
+        //public override EntityEntry Remove(object entity)
+        //{
+        //    if(entity.GetType().BaseType!= null && entity.GetType().BaseType.Name == "IDeleted")
+        //    {
+        //        ((IDeleted)entity).IsDeleted = true;
+
+        //        return new EntityEntry();
+        //    } else
+        //    {
+        //        return base.Remove(entity);
+        //    }
+        //}
 
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{

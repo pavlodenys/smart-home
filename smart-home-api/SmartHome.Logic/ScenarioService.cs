@@ -12,9 +12,22 @@ namespace SmartHome.Logic
             _scenarioRepo = scenarioRepo;
         }
 
-        public IEnumerable<ScenarioDto> GetScenarios()
+        public async Task<IEnumerable<ScenarioDto>> GetScenarios()
         {
-            return _scenarioRepo.GetAll();
+            return await _scenarioRepo.GetAll();
+        }
+
+        //todo: encapsulate delete logic
+        public async Task<int> DeleteScenario(int id)
+        {
+            var deleteResult = _scenarioRepo.GetById(id);
+            if (deleteResult == null) return 0;
+
+            deleteResult.IsDeleted = true;
+
+            await _scenarioRepo._dbContext.SaveChangesAsync();
+
+            return deleteResult.Id;
         }
     }
 }
