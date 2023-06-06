@@ -7,6 +7,7 @@
 
   import {
     formatDate,
+    smallFormatDate,
     createScales,
     createAx,
     createSVG,
@@ -129,7 +130,7 @@
       yDomainMap
     );
 
-    const xAxis = createAx(x, d3.axisBottom, 5, d3.timeFormat("%H-%M-%S"));
+    const xAxis = createAx(x, d3.axisBottom, 5, d3.timeFormat("%H-%M"));
     const yAxis = createAx(y, d3.axisLeft, 5);
 
     const svgWidth = width + margin.left + margin.right + 20;

@@ -4,9 +4,9 @@ using SmartHome.Data.Entities;
 
 namespace SmartHome.Data.AutoMapper
 {
-    public class DeviceProfile : Profile
+    public class AutoMapperProfile : Profile
     {
-        public DeviceProfile()
+        public AutoMapperProfile()
         {
             CreateMap<Device, DeviceDto>();
             CreateMap<DeviceDto, Device>();

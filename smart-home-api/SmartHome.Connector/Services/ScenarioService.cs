@@ -1,11 +1,4 @@
-﻿using SmartHome.Data.DTO;
-using SmartHome.Data.Entities;
-using SmartHome.Logic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SmartHome.Logic;
 
 namespace SmartHome.Connector.Services
 {
@@ -16,9 +9,9 @@ namespace SmartHome.Connector.Services
             _service= service;
         }
 
-        public bool ChangeDeviceStatus(int id)
+        public async Task<bool> ChangeDeviceStatus(int id)
         {
-            return _service.ChangeStatus(id);
+            return await _service.ChangeStatus(id);
         }
     }
 }

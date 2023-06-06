@@ -7,6 +7,7 @@ import { httpFetch } from "../../api/httpServise";
 let timeoutId;
 
 export const formatDate = (d) => moment(d).format("YYYY-MM-DD HH:mm:ss");
+export const smallFormatDate = (d) => moment(d).format("HH:mm");
 
 export const createScales = (width, height, domainX, domainY) => {
     const x = d3.scaleTime().domain(domainX).range([0, width]);
@@ -19,6 +20,13 @@ export const createAx = (x, axisType, tickCount, tickFormat = null) => {
     if (tickFormat) {
         xAxis = xAxis.tickFormat(tickFormat);
     }
+
+    xAxis
+        .attr("transform", "rotate(-90)")
+        .style("text-anchor", "end")
+        .attr("dx", "-0.8em")
+        .attr("dy", "0.15em");
+
     return xAxis;
 };
 

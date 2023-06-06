@@ -57,7 +57,7 @@ namespace SmartHome.Api
             services.AddHostedService<ScenarioConsumer>();
             services.AddHostedService<ScenarioProducer>();
 
-            services.AddAutoMapper(typeof(DeviceProfile));
+            services.AddAutoMapper(typeof(AutoMapperProfile));
 
             services.AddIdentityCore<HomeUser>((setup) =>
             {

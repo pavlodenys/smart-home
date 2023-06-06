@@ -6,7 +6,6 @@
   import type { DeviceData, SensorData } from "../../types";
   import TopMenu from "../top-menu/TopMenu.svelte";
   import { httpFetch } from "../../api/httpServise";
-  export let message: string;
 
   let sensors: SensorData[] = [];
   let devices: DeviceData[] = [];
@@ -21,8 +20,9 @@
 </script>
 
 <h1>Dashboard</h1>
-<p>{message}</p>
 
+
+<!-- TODO: add loading -->
 <div class="dahsboard">
   <Scenario {sensors} {devices} />
   <Sensors {sensors} />

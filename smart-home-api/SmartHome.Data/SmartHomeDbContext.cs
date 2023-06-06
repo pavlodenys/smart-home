@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.Extensions.Configuration;
 using SmartHome.Data.Entities;
 
 namespace SmartHome.Data
@@ -16,6 +14,11 @@ namespace SmartHome.Data
         public SmartHomeDbContext(string connectionString) {
             _connectionString = connectionString;
         }
+
+        public SmartHomeDbContext(DbContextOptions options) : base(options)
+        {
+        }
+
         //public Context(DbContextOptions<Context> options):base(options) { }
 
         public DbSet<Sensor> Sensors { get; set; }

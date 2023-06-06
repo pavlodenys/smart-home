@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 using SmartHome.Logic;
@@ -21,15 +20,6 @@ namespace SmartHome.Api.Controllers
             _service = service;
         }
 
-        [HttpPost]
-        [Route("")]
-        public async Task<IActionResult> SaveScenario([FromBody] ScenarioDto dto)
-        {
-            var saveResult = await _scenarioRepo.Create(dto);
-
-            return Ok(saveResult);
-        }
-
         [HttpGet]
         [Route("")]
         public async Task<IActionResult> GetScenarious()
@@ -43,6 +33,24 @@ namespace SmartHome.Api.Controllers
         public IActionResult GetScenario(int id)
         {
             return Ok(_scenarioRepo.GetById(id));
+        }
+
+        [HttpPost]
+        [Route("")]
+        public async Task<IActionResult> SaveScenario([FromBody] ScenarioDto dto)
+        {
+            var saveResult = await _scenarioRepo.Create(dto);
+
+            return Ok(saveResult);
+        }
+
+        [HttpPut]
+        [Route("")]
+        public async Task<IActionResult> UpdateScenario([FromBody] ScenarioDto dto)
+        {
+            var saveResult = await _scenarioRepo.Update(dto.Id, dto);
+
+            return Ok(saveResult);
         }
 
         [HttpDelete]

@@ -11,7 +11,7 @@
   }
 </script>
 
-<div>
+<div class="sensors-wrap">
   <h1>Sensors</h1>
 
   {#if (!sensors || sensors.length === 0)}
@@ -25,4 +25,8 @@
   {/if}
   <button on:click={createNew}>+</button>
 </div>
+
+<style>
+    @import "./Sensors.scss";
+</style>
 

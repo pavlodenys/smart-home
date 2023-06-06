@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using SmartHome.Api.Utilities;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 using SmartHome.Logic;
-using System.Data;
 
 namespace SmartHome.Api.Controllers
 {
@@ -17,7 +15,6 @@ namespace SmartHome.Api.Controllers
         private readonly UserManager<HomeUser> _userManager;
         private readonly SignInManager<HomeUser> _signInManager;
         private readonly IJwtTokenService _jwtTokenService;
-        //private readonly IRepository<HomeUser, HomeUserDto> _userRepository;
         private readonly IRepository<RefreshToken, RefreshTokenDto> _tokenRepository;
 
         public AuthController(UserManager<HomeUser> userManager,
