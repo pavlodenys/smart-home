@@ -21,12 +21,6 @@ export const createAx = (x, axisType, tickCount, tickFormat = null) => {
         xAxis = xAxis.tickFormat(tickFormat);
     }
 
-    xAxis
-        .attr("transform", "rotate(-90)")
-        .style("text-anchor", "end")
-        .attr("dx", "-0.8em")
-        .attr("dy", "0.15em");
-
     return xAxis;
 };
 
@@ -293,6 +287,10 @@ export const updateDataChart = (
     // Update the x and y axes with the new domains
 
     xAxis.transition().duration(1000).call(d3.axisBottom(x));
+
+    xAxis.selectAll(".tick text")
+        .attr("transform", "translate(-10, 0) rotate(-40)") // Rotate the tick labels by -40 degrees
+        .style("text-anchor", "end"); 
     yAxis.call(d3.axisLeft(y));
 
     // Select the line and bind the new data to it

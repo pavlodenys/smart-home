@@ -95,7 +95,7 @@
 
     var trackerWidth = 20;
     var trackerHeight = 50;
-    const margin = { top: 5, right: 5, bottom: 10, left: 15 };
+    const margin = { top: 5, right: 5, bottom: 30, left: 15 };
     const width = 460 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
     const minimapHeight = 50;
@@ -130,7 +130,7 @@
       yDomainMap
     );
 
-    const xAxis = createAx(x, d3.axisBottom, 5, d3.timeFormat("%H-%M"));
+    const xAxis = createAx(x, d3.axisBottom, 5, d3.timeFormat("%H-%M-%S"));
     const yAxis = createAx(y, d3.axisLeft, 5);
 
     const svgWidth = width + margin.left + margin.right + 20;
@@ -157,6 +157,10 @@
       .append("g")
       .attr("transform", `translate(${margin.left}, ${height})`)
       .call(xAxis);
+
+      xAxisSvg.selectAll(".tick text")
+  .attr("transform", "translate(-10, 0) rotate(-40)") // Rotate the tick labels by -40 degrees
+  .style("text-anchor", "end"); 
     const yAxisSvg = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, 0)`)

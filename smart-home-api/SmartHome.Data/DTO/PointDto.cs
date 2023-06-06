@@ -7,5 +7,6 @@
         public double Value { get; set; }
         public DateTime DateTime { get; set; }
         public long Time { get; set; }
+        public int DataId { get; set; }
     }
 }

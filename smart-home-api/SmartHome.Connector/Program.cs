@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Configuration;
 using SmartHome.Connector.Services;
 using SmartHome.Connector.Settings;
-using SmatHome.Connector.SmatHome.Connector;
 
 namespace SmatHome.Connector
 {

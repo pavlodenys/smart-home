@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using SmartHome.Data;
+using SmartHome.Data.AutoMapper;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SmatHome.Connector
 {
-    namespace SmatHome.Connector
-    {
-        public class MessageProcessor
+    public class MessageProcessor
         {
             private readonly HubConnection _hubConnection;
 
@@ -37,7 +35,7 @@ namespace SmatHome.Connector
                         db.SaveChanges();
 
                         // Perform any additional processing or notifications here
-                        _hubConnection.InvokeAsync("RabbitMQMessage", data); //TODO: check
+                        _hubConnection.InvokeAsync("RabbitMQMessage", data.MapToDto<Point, PointDto>()); //TODO: check
                     }
                 }
             }
@@ -49,13 +47,10 @@ namespace SmatHome.Connector
                 if (point != null && point.Time != 0)
                 {
                     var unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                    TimeSpan utcOffset = TimeSpan.FromHours(3); // UTC+3
 
-                    dateTime = unixEpoch.AddSeconds(point.Time).Add(utcOffset);
+                    dateTime = unixEpoch.AddSeconds(point.Time).ToLocalTime();
                 }
                 return dateTime != null ? dateTime.Value : DateTime.Now;
             }
         }
     }
-}
-
