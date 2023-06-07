@@ -18,6 +18,8 @@ export let devices: DeviceData[] = [];
     </div>
   {/each}
 </div>
+
+<!-- todo: add/delete/update button, make it reusable -->
 </div>
 
 

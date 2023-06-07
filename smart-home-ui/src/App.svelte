@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import Router from "svelte-spa-router";
 
-
   import { getJwtToken, cleanJwtToken } from "./api/auth";
   import "./styles.scss";
   import { redirect } from "./redirects";
@@ -26,14 +25,16 @@
   const logout = () => {
     authenticated = false;
     cleanJwtToken();
+      push(`/login`);
   };
-
-
 
   const routeLoading = (event) => {
     console.log(event);
 
-    if (event.detail.route === "/forgot-password" || event.detail.route === "/register") {
+    if (
+      event.detail.route === "/forgot-password" ||
+      event.detail.route === "/register"
+    ) {
       return true;
     }
 
@@ -77,11 +78,13 @@
   </a>
   <div class="links">
     <a href="/#/dashboard">Dashboard</a>
+
     {#if !authenticated}
       <a href="/#/login">Login</a>
     {/if}
     {#if authenticated}
-      <a href="/#/login" on:click={logout}>Logout</a>
+      <a href="/#/profile">Profile</a>
+      <button  on:click={logout}>Logout</button>
     {/if}
   </div>
 </nav>
@@ -95,8 +98,7 @@
   {routes}
   on:routeLoading={routeLoading}
   on:conditionsFailed={conditionsFailed}
-/> 
-
+/>
 
 <style>
   @import "./styles/App.scss";
