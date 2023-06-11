@@ -56,13 +56,17 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+
+  &:hover {
+    border-color: #646cff;
+  }
+  &:focus,
+  &:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
+  }
+  &.c-warn {
+    background-color: #7a2b2b !important;
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -82,7 +86,6 @@ button:focus-visible {
   display: flex;
 }
 
-
 /* Global styles */
 
 * {
@@ -93,7 +96,7 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 16px;
   color: #333;
 }
@@ -168,4 +171,104 @@ h1 {
   .devices {
     order: 3;
   }
+}
+
+.logo {
+  height: 50px;
+  width: 50px;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.svelte:hover {
+  filter: drop-shadow(0 0 2em #ff3e00aa);
+}
+.read-the-docs {
+  color: #888;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 60px;
+  margin-bottom: 1rem;
+}
+
+.links {
+  padding-left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+a {
+  font-size: 16px;
+  color: #333333;
+  text-decoration: none;
+  &:hover {
+    color: #666666;
+  }
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.modal-label {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+
+  & span{
+    text-align: initial;
+    min-width: 8rem;
+  }
+}
+
+// .w-100{
+//   width:100%;
+// }
+
+@function generateWidthClasses() {
+  $widthClasses: ();
+
+  @for $i from 1 through 20 {
+    $className: unquote('.w-#{$i * 5}');
+    $width: $i * 5%;
+
+    $widthClasses: map-merge($widthClasses, ($className: (width: $width)));
+  }
+
+  @return $widthClasses;
+}
+
+$widthClasses: generateWidthClasses();
+
+@each $className, $styles in $widthClasses {
+  #{$className} {
+    @each $property, $value in $styles {
+      #{$property}: $value;
+    }
+  }
+}
+
+.modal-title {
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: initial;
+}
+
+.m-l-1 {
+  margin-left: 1rem;
 }

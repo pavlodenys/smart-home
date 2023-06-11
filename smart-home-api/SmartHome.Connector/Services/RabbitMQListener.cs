@@ -1,9 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SmartHome.Connector.Settings;
 using SmartHome.Data.DTO;
+using SmatHome.Connector;
 using System.Text;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SmartHome.Connector.Services
 {
@@ -28,21 +31,40 @@ namespace SmartHome.Connector.Services
             _channel.QueueBind(queue: _queueName, exchange: _exchangeName, routingKey: _queueName);
         }
 
-        public void StartListening(Action<PointDto> processMessage)
+        public void StartListening(Action<PointDto?> processMessage)
         {
             var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) =>
+            try
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                var point = JsonConvert.DeserializeObject<PointDto>(message);
+                consumer.Received += (model, ea) =>
+                {
+                    var body = ea.Body.ToArray();
+                    var message = Encoding.UTF8.GetString(body);
 
-                if (point == null) return;
+                    try
+                    {
+                        var point = JsonConvert.DeserializeObject<PointDto>(message);
+                        processMessage(point);
+                    }
+                    catch (JsonReaderException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    catch (SignalRException e)
+                    {
+                        throw e;
+                    }
+                };
 
-                processMessage(point);
-            };
+                _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
+            }
+            catch (SignalRException e)
+            {
+                throw e;
+            }
 
-            _channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
+
+
         }
 
         public void StopListening()

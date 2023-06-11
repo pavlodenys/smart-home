@@ -13,6 +13,7 @@ namespace SmartHome.Api.Controllers
     public class SensorController : ControllerBase
     {
         private IRepository<Sensor, SensorDto> _repo { get; set; }
+        private IRepository<Data.Entities.Data, ChartDataDto> _chartRepo { get; set; }
         //private IRepository<SmartHome.Data.Entities.Data, ChartDataDto> _dataRepo { get; set; }
         private IRepository<Point, PointDto> _pointsRepo { get; set; }
         private IRepository<Device, DeviceDto> _devicesRepo { get; set; }
@@ -22,16 +23,15 @@ namespace SmartHome.Api.Controllers
 
         private IService _service { get; set; }
 
-        public SensorController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, ILogger<HomeController> logger, IRepository<Point, PointDto> pointsRepo)
+        public SensorController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, ILogger<HomeController> logger, IRepository<Point, PointDto> pointsRepo, IRepository<Data.Entities.Data, ChartDataDto> chartRepo)
         {
             _repo = repo;
             _service = service;
             _devicesRepo = devicesRepo;
             _logger = logger;
             _pointsRepo = pointsRepo;
+            _chartRepo = chartRepo;
         }
-
-
 
         [HttpGet]
         [Route("")]
@@ -92,11 +92,11 @@ namespace SmartHome.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public IActionResult UpdateSensor(int id, [FromBody] SensorDto sensorDto)
+        public async Task<IActionResult> UpdateSensor(int id, [FromBody] SensorDto sensorDto)
         {
             try
             {
-                var sensor = _repo.Update(id, sensorDto);
+                var sensor = await _repo.Update(id, sensorDto);
                 //_unitOfWork.SaveChanges();
 
                 return Ok(sensor);
@@ -115,6 +115,20 @@ namespace SmartHome.Api.Controllers
             if (entity != null)
             {
                 var deleteResult = _repo.Delete(entity);
+                return Ok(deleteResult);
+            }
+
+            return Ok(false);
+        }
+
+        [HttpDelete]
+        [Route("{id}/data")]
+        public IActionResult DeleteSensorData(int id)
+        {
+            var entity = _chartRepo.GetById(id); // TODO: delete by id
+            if (entity != null)
+            {
+                var deleteResult = _chartRepo.Delete(entity);
                 return Ok(deleteResult);
             }
 

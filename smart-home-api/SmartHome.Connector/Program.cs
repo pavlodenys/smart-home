@@ -7,7 +7,7 @@ namespace SmatHome.Connector
 {
     class Program
     {
-        private const int MaxAttempts = 5;
+        private const int MAX_ATTEMPTS = 5;
         private const int InitialDelayMilliseconds = 1000;
         private const int MaxDelayMilliseconds = 5000;
 
@@ -34,7 +34,7 @@ namespace SmatHome.Connector
             int attempts = 0;
             var delayMilliseconds = InitialDelayMilliseconds;
 
-            while (attempts < MaxAttempts)
+            while (attempts < MAX_ATTEMPTS)
             {
                 try
                 {
@@ -45,7 +45,7 @@ namespace SmatHome.Connector
                 catch (HttpRequestException e)
                 {
                     Console.WriteLine($"{e.Message}");
-                    Console.WriteLine($"Attempt {attempts + 1} of {MaxAttempts}");
+                    Console.WriteLine($"Attempt {attempts + 1} of {MAX_ATTEMPTS}");
 
                     await Task.Delay(delayMilliseconds);
                     delayMilliseconds = Math.Min(delayMilliseconds * 2, MaxDelayMilliseconds);
@@ -65,7 +65,31 @@ namespace SmatHome.Connector
 
             var rabbitMqListener = new RabbitMQListener(api, rabbitMq);
             var messageProccessor = new MessageProcessor(connection);
-            rabbitMqListener.StartListening(messageProccessor.ProcessMessage);
+
+            try
+            {
+                rabbitMqListener.StartListening(messageProccessor.ProcessMessage);
+            }
+            catch (DatabaseConnectionException e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Wait...");
+                await Task.Delay(1000);
+            }
+            catch (SignalRException e)
+            {
+                Console.WriteLine(e.Message);
+
+                switch (connection.State)
+                {
+                    case HubConnectionState.Disconnected:
+                        await connection.StartAsync();
+                        break;
+                    default:
+                        await Task.Delay(1000);
+                        break;
+                }
+            }
 
             while (true)
             {

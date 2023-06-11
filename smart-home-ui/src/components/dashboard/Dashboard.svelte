@@ -28,7 +28,3 @@
   <Sensors {sensors} />
   <Devices {devices} />
 </div>
-
-<style>
-  @import "../../styles.scss";
-</style>

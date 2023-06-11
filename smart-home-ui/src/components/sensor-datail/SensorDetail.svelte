@@ -4,6 +4,7 @@
   import { httpFetch } from "../../api/httpServise";
   import type { SensorData } from "../../types";
   import moment from "moment";
+  import Modal from "../modal/Modal.svelte";
 
   const getInitialChartData = (id) => {
     return {
@@ -22,10 +23,13 @@
     chartData: [],
   };
   let showNewData = false;
+  let isDataEdit = false;
   //let newChartData = getInitialChartData();
-  let newChartDataArray = [];
+  let newChartData;
+  // let newChartDataArray = [];
   let page = 0;
   let count = 50;
+  let showModal = false;
   export let params = null;
 
   onMount(async () => {
@@ -54,29 +58,34 @@
   };
 
   const connectToData = () => {
-    showNewData = true;
+    //showNewData = true;
+    showModal = true;
 
-    newChartDataArray = [
-      ...newChartDataArray,
-      getInitialChartData(newChartDataArray.length + 1),
-    ];
+    newChartData = getInitialChartData(sensor.chartData.length + 1);
+
+    // newChartDataArray = [
+    //   ...newChartDataArray,
+    //   getInitialChartData(newChartDataArray.length + 1),
+    // ];
   };
 
   const saveSensor = async () => {
     if (sensor.id) {
-      const result = await httpFetch.put(
-        `api/home/sensor/${sensor.id}`,
-        sensor
-      );
+      const result = await httpFetch.put(`api/sensor/${sensor.id}`, sensor);
       console.log(result);
+
+      sensor = result;
     } else {
-      const result = await httpFetch.post(`api/home/sensors`, sensor);
+      const result = await httpFetch.post(`api/sensor`, sensor);
       console.log(result);
+      sensor = result;
     }
   };
 
   const cancelConnect = () => {
-    showNewData = false;
+    //showNewData = false;
+
+    newChartData = undefined;
   };
 
   const saveDataSource = () => {
@@ -84,83 +93,169 @@
       sensor.chartData = [];
     }
 
-    sensor.chartData = [...sensor.chartData, ...newChartDataArray];
+    sensor.chartData = [...sensor.chartData, newChartData];
 
     cancelConnect();
   };
+
+  const closeModal = () => {
+    showModal = false;
+    cancelConnect();
+  };
+
+  const isValid = (sensorData) => {
+    return !(sensorData.name === "" || sensorData.type === "");
+  };
+
+  const saveData = async () => {
+    if (isValid(sensor)) {
+      if (!sensor.chartData) {
+        sensor.chartData = [];
+      }
+
+      sensor.chartData = [...sensor.chartData, newChartData];
+
+      //todo: save data
+      let result = await httpFetch.put(`api/sensor/${sensor.id}`, sensor);
+      if (result) {
+        closeModal();
+      } else {
+        showError();
+      }
+    }
+    closeModal();
+  };
+
+  const editData = (i) => {
+    showModal = true;
+
+    newChartData = sensor.chartData[i];
+    // newChartData = sensor.chartData[i];
+  };
+
+  function showError() {
+    console.log("error");
+  }
+
+  const deleteData = async (index: number) => {
+    let result = await httpFetch.delete(`api/sensor/${index}/data`);
+    if (result) console.log(result);
+  };
 </script>
 
-<div class="sensor-setup">
-  <div class="sensor-title">
-    <label for="name-input">Name:</label>
-    <input type="text" id="name-input" bind:value={sensor.name} />
+<div class="sensor-container">
+  <div class="sensor-setup">
+    <div class="sensor-title">
+      <label for="name-input">Name:</label>
+      <input type="text" id="name-input" bind:value={sensor.name} />
+    </div>
+
+    <div class="sensor-title">
+      <label for="description-input">Description:</label>
+      <input
+        type="text"
+        id="description-input"
+        bind:value={sensor.description}
+      />
+    </div>
+
+    <div class="sensor-title">
+      <label for="type-input">Type:</label>
+      <input type="text" id="type-input" bind:value={sensor.type} />
+      <!-- todo: change it to dropdown -->
+    </div>
+
+    <div class="d-flex justify-between">
+      <button on:click={saveSensor}>Save</button>
+      {#if sensor?.id}
+        <button on:click={connectToData}>+ Connect Data</button>
+      {/if}
+    </div>
   </div>
 
-  <div class="sensor-info">
-    <label for="description-input">Description:</label>
-    <textarea id="description-input" bind:value={sensor.description} />
+  <div class="d-flex">
+    {#if sensor?.chartData}
+      {#each sensor.chartData as data, index}
+        <div class="m-l-1">
+          <button
+            class="edit-button"
+            on:click={() => {
+              editData(index);
+            }}>Edit {index}</button
+          >
+          <button
+            class="c-warn"
+            on:click={() => {
+              deleteData(data.id);
+            }}>Delete {index}</button
+          >
+          <Chart chart={data} chartId={index} on:chartEvent={updateChartData} />
+        </div>
+      {/each}
+    {:else}
+      No data available
+    {/if}
   </div>
-
-  <div class="sensor-info">
-    <label for="type-input">Type:</label>
-    <input type="text" id="type-input" bind:value={sensor.type} />
-  </div>
-
- <div class="d-flex">
-   <button on:click={connectToData}>+ Connect Data</button>
-  <button on:click={saveSensor}>Save</button>
- </div>
 </div>
 
-{#if sensor?.chartData}
-  {#each sensor.chartData as data, index}
-    <Chart chart={data} chartId={index} on:chartEvent={updateChartData} />
-  {/each}
-{:else}
-  No data available
-{/if}
+<Modal
+  show={showModal}
+  {closeModal}
+  ok={saveData}
+  title={"Edit Sensor Data Source"}
+  titleClass={"modal-title"}
+>
+  <div class="new-data">
+    <!-- {#each newChartDataArray as newChartData} -->
+    <form>
+      <label class="modal-label">
+        <span> Name:</span>
+        <input class="w-100" type="text" bind:value={newChartData.name} />
+      </label>
 
-<div class="new-data">
-  {#if showNewData}
-    {#each newChartDataArray as newChartData}
-      <form>
-        <label>
-          Name:
-          <input type="text" bind:value={newChartData.name} />
-        </label>
+      <label class="modal-label">
+        <span> Description:</span>
+        <input
+          class="w-100"
+          type="text"
+          bind:value={newChartData.description}
+        />
+      </label>
 
-        <label>
-          Description:
-          <textarea bind:value={newChartData.description} />
-        </label>
+      <label class="modal-label">
+        <span> Type:</span>
+        <select bind:value={newChartData.type}>
+          <option value="">-- Select Type --</option>
+          <option value="Bar">Bar</option>
+          <option value="Line">Line</option>
+          <option value="Pie">Pie</option>
+        </select>
+      </label>
 
-        <label>
-          Type:
-          <select bind:value={newChartData.type}>
-            <option value="">-- Select Type --</option>
-            <option value="Bar">Bar</option>
-            <option value="Line">Line</option>
-            <option value="Pie">Pie</option>
-          </select>
-        </label>
-
-        <button type="submit" on:click={saveDataSource}>Submit</button>
-        <button on:click={cancelConnect}>Cancel</button>
-      </form>
-    {/each}
-  {/if}
-</div>
+      <!-- <button type="submit" on:click={saveDataSource}>Submit</button>
+      <button on:click={cancelConnect}>Cancel</button> -->
+    </form>
+    <!-- {/each} -->
+  </div>
+</Modal>
 
 <style>
-  .d-flex {
-    display: flex;
-    justify-content: space-between;
+  .edit-button {
+    position: relative;
+     background-color: darkslateblue;
   }
+
+  .sensor-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   .sensor-setup {
     display: flex;
     flex-direction: column;
     max-width: 40%;
     min-width: 20rem;
+    margin-bottom: 1rem;
   }
   .new-data {
     display: flex;

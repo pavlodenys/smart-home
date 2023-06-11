@@ -1,7 +1,14 @@
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import preprocess from 'svelte-preprocess';
 
 export default {
-  // Consult https://svelte.dev/docs#compile-time-svelte-preprocess
-  // for more information about preprocessors
-  preprocess: vitePreprocess(),
-}
+  // Use preprocess() for Svelte preprocessor
+  preprocess: [
+    preprocess({
+      scss: {
+       // prependData: `@import 'src/styles.scss';`,
+      },
+    }),
+    svelte(),
+  ],
+};

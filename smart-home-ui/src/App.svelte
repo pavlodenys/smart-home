@@ -1,9 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Router from "svelte-spa-router";
-
   import { getJwtToken, cleanJwtToken } from "./api/auth";
-  import "./styles.scss";
   import { redirect } from "./redirects";
   import { push } from "svelte-spa-router";
   import { routes } from "./routes";
@@ -99,7 +97,3 @@
   on:routeLoading={routeLoading}
   on:conditionsFailed={conditionsFailed}
 />
-
-<style>
-  @import "./styles/App.scss";
-</style>
