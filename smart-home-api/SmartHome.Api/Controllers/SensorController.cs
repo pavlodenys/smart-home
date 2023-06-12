@@ -13,7 +13,7 @@ namespace SmartHome.Api.Controllers
     public class SensorController : ControllerBase
     {
         private IRepository<Sensor, SensorDto> _repo { get; set; }
-        private IRepository<Data.Entities.Data, ChartDataDto> _chartRepo { get; set; }
+        private IRepository<Data.Entities.Data, DataDto> _chartRepo { get; set; }
         //private IRepository<SmartHome.Data.Entities.Data, ChartDataDto> _dataRepo { get; set; }
         private IRepository<Point, PointDto> _pointsRepo { get; set; }
         private IRepository<Device, DeviceDto> _devicesRepo { get; set; }
@@ -23,7 +23,7 @@ namespace SmartHome.Api.Controllers
 
         private IService _service { get; set; }
 
-        public SensorController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, ILogger<HomeController> logger, IRepository<Point, PointDto> pointsRepo, IRepository<Data.Entities.Data, ChartDataDto> chartRepo)
+        public SensorController(IRepository<Sensor, SensorDto> repo, IService service, IRepository<Device, DeviceDto> devicesRepo, ILogger<HomeController> logger, IRepository<Point, PointDto> pointsRepo, IRepository<Data.Entities.Data, DataDto> chartRepo)
         {
             _repo = repo;
             _service = service;

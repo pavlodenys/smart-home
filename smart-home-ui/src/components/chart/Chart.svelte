@@ -158,9 +158,10 @@
       .attr("transform", `translate(${margin.left}, ${height})`)
       .call(xAxis);
 
-      xAxisSvg.selectAll(".tick text")
-  .attr("transform", "translate(-10, 0) rotate(-40)") // Rotate the tick labels by -40 degrees
-  .style("text-anchor", "end"); 
+    xAxisSvg
+      .selectAll(".tick text")
+      .attr("transform", "translate(-10, 0) rotate(-40)") // Rotate the tick labels by -40 degrees
+      .style("text-anchor", "end");
     const yAxisSvg = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, 0)`)
@@ -171,7 +172,12 @@
     datePicker.on("change", async (e) => {
       const newDate = datePicker.node().value;
       selectedDate = newDate;
-      const filteredPoints = await filterPoints(allPoints, newDate, chartId, chart.id);
+      const filteredPoints = await filterPoints(
+        allPoints,
+        newDate,
+        chartId,
+        chart.id
+      );
 
       if (!filteredPoints || !filteredPoints.length) {
         d3.select(".line").remove();
@@ -195,9 +201,23 @@
       );
     });
 
+    svg
+      .append("defs")
+      .append("clipPath")
+      .attr("id", "chart-area-clip")
+      .append("rect")
+      .attr("x", 17)
+      .attr("y", 0)
+      .attr("width", width)
+      .attr("height", height);
+    const chartArea = svg
+      .append("g")
+      .attr("class", "chart-area")
+      .attr("clip-path", "url(#chart-area-clip)");
+
     const valueLine = createValueLine(x, y);
     const minimapLine = createValueLine(minimapXScale, minimapYScale);
-    const path = createPath(svg, points, valueLine, margin);
+    const path = createPath(chartArea, points, valueLine, margin);
     const miniMapPath = createPath(svgMinimap, points, minimapLine, margin);
 
     const tracker = createTracker(
@@ -207,7 +227,7 @@
       svgWidth
     );
 
-    const circle1 = createCircle(chartId, svg, points, margin, x, y);
+    const circle1 = createCircle(chartId, chartArea, points, margin, x, y);
 
     const drag = createDragger(
       tracker,
@@ -270,8 +290,6 @@
       // console.log(newXDomain);
     }
   });
-
-
 </script>
 
 <div>

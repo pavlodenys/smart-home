@@ -5,6 +5,8 @@ import Home from "./components/Home.svelte";
 import NotFound from "./components/NotFound.svelte";
 import ForgotPassword from "./components/forgot-password/ForgotPassword.svelte";
 import Register from "./components/register/Register.svelte";
+import Reports from "./components/reports/Reports.svelte";
+import Help from "./components/help/Help.svelte";
 
 export const routes = {
     "/": Home,
@@ -21,6 +23,8 @@ export const routes = {
         asyncComponent: () =>
             import("./components/sensor-datail/SensorDetail.svelte"),
     }),
+    "/reports": Reports,
+    "/help": Help,
     "/register": Register,
     "/forgot-password": ForgotPassword,
     "/login": Login,

@@ -76,6 +76,11 @@
   </a>
   <div class="links">
     <a href="/#/dashboard">Dashboard</a>
+    <a href="/#/dashboard/devices">Devices</a>
+    <a href="/#/dashboard/sensors">Sensors</a>
+    <a href="/#/settings">Settings</a>
+    <a href="/#/reports">Reports</a>
+    <a href="/#/help">Help</a>
 
     {#if !authenticated}
       <a href="/#/login">Login</a>

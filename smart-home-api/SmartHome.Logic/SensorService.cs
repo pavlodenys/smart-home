@@ -11,9 +11,9 @@ namespace SmartHome.Logic
     public class SensorService
     {
         private readonly IRepository<Sensor, SensorDto> _sensorRepo;
-        private readonly IRepository<SmartHome.Data.Entities.Data, ChartDataDto> _chartRepo;
+        private readonly IRepository<SmartHome.Data.Entities.Data, DataDto> _chartRepo;
 
-        public SensorService(IRepository<Sensor, SensorDto> sensorRepo, IRepository<Data.Entities.Data, ChartDataDto> chartRepo)
+        public SensorService(IRepository<Sensor, SensorDto> sensorRepo, IRepository<Data.Entities.Data, DataDto> chartRepo)
         {
             _sensorRepo = sensorRepo;
             _chartRepo = chartRepo;

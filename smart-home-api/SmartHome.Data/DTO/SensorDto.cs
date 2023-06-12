@@ -15,6 +15,6 @@
         public string? Type { get; set; }
         public int DataId { get; set; }
 
-        public IEnumerable<ChartDataDto> ChartData { get; set; } = Enumerable.Empty<ChartDataDto>();
+        public IEnumerable<DataDto> ChartData { get; set; } = Enumerable.Empty<DataDto>();
     }
 }

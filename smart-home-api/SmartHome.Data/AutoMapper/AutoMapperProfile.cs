@@ -39,13 +39,13 @@ namespace SmartHome.Data.AutoMapper
 
 
 
-            CreateMap<Entities.Data, ChartDataDto>()
+            CreateMap<Entities.Data, DataDto>()
             .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
                .ForMember(dto => dto.Name, opt => opt.MapFrom(entity => entity.Name))
                .ForMember(dto => dto.Data, opt => opt.MapFrom(entity => entity.Points))
                .ForMember(dto => dto.Description, opt => opt.MapFrom(entity => entity.Description));
 
-            CreateMap<ChartDataDto, Entities.Data>()
+            CreateMap<DataDto, Entities.Data>()
          .ForMember(dto => dto.Id, opt => opt.MapFrom(entity => entity.Id))
             .ForMember(dto => dto.Name, opt => opt.MapFrom(entity => entity.Name))
             .ForMember(dto => dto.Points, opt => opt.MapFrom(entity => entity.Data))

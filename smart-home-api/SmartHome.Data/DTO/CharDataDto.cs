@@ -1,6 +1,6 @@
 ﻿namespace SmartHome.Data.DTO
 {
-    public class ChartDataDto
+    public class DataDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

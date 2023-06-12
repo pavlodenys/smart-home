@@ -42,17 +42,17 @@ export const createValueLine = (x, y) => {
         .y((d) => y(d.value));
 };
 
-export const createPath = (svg, points, valueline, margin) => {
-    return svg
+export const createPath = (svgElement, points, valueline, margin) => {
+    return svgElement
         .append("path")
-        .data([points])
+        .datum(points)
         .attr("transform", `translate(${margin.left}, 0)`)
         .attr("class", "line")
         .attr("d", valueline);
 };
 
-export const createTracker = (svg, width, height, translateX) => {
-    var tracker = svg
+export const createTracker = (svgElement, width, height, translateX) => {
+    var tracker = svgElement
         .append("rect")
         .attr("width", width)
         .attr("height", height)
@@ -63,8 +63,8 @@ export const createTracker = (svg, width, height, translateX) => {
     return tracker;
 };
 
-export const createCircle = (chartId, svg, points, margin, x, y) => {
-    return svg
+export const createCircle = (chartId, svgElement, points, margin, x, y) => {
+    return svgElement
         .selectAll(`.dot-${chartId}`)
         .data(points)
         .enter()
