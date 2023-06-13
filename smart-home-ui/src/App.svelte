@@ -41,7 +41,7 @@
     if (jwtToken) {
       // const token = jwtDecode(jwtToken);
       authenticated = !!jwtToken;
-      console.log(jwtToken);
+      //console.log(jwtToken);
 
       return true;
     }
