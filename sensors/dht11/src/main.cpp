@@ -24,9 +24,9 @@ struct Point
 };
 //const DateTime &dt;
 
-// const char *ssid = "Nexty"; // Enter SSID here
-const char *ssid = "Potter"; // Enter SSID here
-const char *password = "04041992";
+
+const char *ssid = "network"; // Enter SSID here
+const char *password = "11111111";
 
 // const char *broker = "192.168.0.151";
 const char *broker = "192.168.3.21";
@@ -128,24 +128,24 @@ void loop()
         now};
     Point humidity = {3, h, now};
 
-    StaticJsonDocument<128> docT;
+      StaticJsonDocument<128> docT;
     StaticJsonDocument<128> docH;
-    docT["Id"] = temperature.Id;
+     docT["Id"] = temperature.Id;
     docH["Id"] = humidity.Id;
-    docH["Name"] = "%";
+     docH["Name"] = "%";
     docT["Name"] = "C";
-    docT["Value"] = temperature.Value;
+     docT["Value"] = temperature.Value;
     docH["Value"] = humidity.Value;
 
-    docT["Time"] = temperature.Time;
+     docT["Time"] = temperature.Time;
     docH["Time"] = humidity.Time;
-    char jsonT[128];
+      char jsonT[128];
     char jsonH[128];
-    serializeJson(docT, jsonT);
+     serializeJson(docT, jsonT);
     serializeJson(docH, jsonH);
-    Serial.println(jsonT);
+     Serial.println(jsonT);
     Serial.println(jsonH);
-    client.publish("sensors_data", jsonT); // TODO: add ID !!!
+     client.publish("sensors_data", jsonT); // TODO: add ID !!!
     client.publish("sensors_data", jsonH);
   }
 }
