@@ -23,8 +23,8 @@
     "vite": "^4.1.0"
   },
   "dependencies": {
-    "@microsoft/signalr": "^7.0.7",
-    "@types/d3": "^7.4.1",
+    "@microsoft/signalr": "^7.0.14",
+    "@types/d3": "^7.4.3",
     "d3": "^7.8.5",
     "d3-tip": "^0.9.1",
     "jwt-decode": "^3.1.2",
