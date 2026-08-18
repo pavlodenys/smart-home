@@ -4,6 +4,7 @@
   import * as d3 from "d3";
   import moment from "moment";
   import * as signalR from "@microsoft/signalr";
+  import { httpFetch } from "../../api/httpServise";
 
   import {
     formatDate,
@@ -34,6 +35,7 @@
       skipNegotiation: true,
       transport: signalR.HttpTransportType.WebSockets,
     }) // Specify the URL of your SignalR hub
+    .withAutomaticReconnect()
     .build();
 
   let selectedDate = moment().format("YYYY-MM-DD");
@@ -80,6 +82,41 @@
     allPoints = chart.data;
 
     connection.start().catch((err) => console.error(err));
+
+    // a dropped connection silently stops all future updates without this; on reconnect,
+    // re-fetch the day so any points missed while disconnected get backfilled
+    connection.onreconnected(async () => {
+      if (!svg) {
+        return;
+      }
+
+      const sensor = await httpFetch.get(`api/sensor/${chart.id}/${selectedDate}`);
+      const matchingChart = sensor?.chartData?.find((c) => c.id === chart.id);
+      const existingIds = new Set(allPoints.map((p: any) => p.id));
+      const newPoints = (matchingChart?.data ?? []).filter((p: any) => !existingIds.has(p.id));
+
+      if (newPoints.length) {
+        allPoints = [...allPoints, ...newPoints];
+        const filteredPoints = await filterPoints(allPoints, selectedDate, chartId, chart.id);
+        updateDataChart(
+          chartId,
+          filteredPoints,
+          x,
+          y,
+          xAxisSvg,
+          yAxisSvg,
+          svg,
+          margin,
+          svgMinimap,
+          minimapLine,
+          minimapXScale,
+          minimapYScale
+        );
+        if (tracker) {
+          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+        }
+      }
+    });
 
     connection.on("ReceiveMessage", async (receivedMessage) => {
       //console.log(receivedMessage);

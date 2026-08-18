@@ -7,9 +7,13 @@ namespace SmartHome.Data
     {
         // private readonly string _connectionString = "Server=.;Database=SmartHouse;Integrated Security=true;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True";
 
-        private readonly string _connectionString = "Server=192.168.3.21,1433;Database=SmartHouse;User Id=dockerASP;Password=Rabbitball23;TrustServerCertificate=True";
+        private readonly string _connectionString;
 
-        public SmartHomeDbContext() => new SmartHomeDbContext("Server=192.168.3.21,1433;Database=SmartHouse;User Id=dockerASP;Password=Rabbitball23;TrustServerCertificate=True");
+        public SmartHomeDbContext()
+        {
+            _connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+                ?? "Host=localhost;Port=5432;Database=SmartHouse;Username=smarthome;Password=SmartHome_local_2026!";
+        }
 
         public SmartHomeDbContext(string connectionString) {
             _connectionString = connectionString;
@@ -17,6 +21,7 @@ namespace SmartHome.Data
 
         public SmartHomeDbContext(DbContextOptions options) : base(options)
         {
+            _connectionString = string.Empty;
         }
 
         //public Context(DbContextOptions<Context> options):base(options) { }
@@ -31,7 +36,10 @@ namespace SmartHome.Data
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(_connectionString);
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseNpgsql(_connectionString);
+            }
         }
 
         //public override EntityEntry Remove(object entity)

@@ -74,7 +74,7 @@ void publishMoisture()
     const time_t now = time(nullptr);
 
     StaticJsonDocument<128> document;
-    document["Id"] = SOIL_SENSOR_ID;
+    document["Id"] = SOIL_DATA_ID;
     document["Name"] = "%";
     document["Value"] = moisturePercent;
     document["Time"] = now > 0 ? now : 0;
