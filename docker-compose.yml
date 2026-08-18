@@ -15,7 +15,7 @@ services:
       context: smart-home-api
       dockerfile: ./SmartHome.Connector/Dockerfile
     environment:
-      ConnectionStrings__DefaultConnection: Server=sql-server,1433;Database=SmartHouse;User Id=sa;Password=SmartHome_local_2026!;TrustServerCertificate=True
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=SmartHouse;Username=smarthome;Password=SmartHome_local_2026!
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Username: rmuser
       RabbitMQ__Password: rmpassword
@@ -35,11 +35,11 @@ services:
       dockerfile: ./SmartHome.Api/Dockerfile
     environment:
       ASPNETCORE_URLS: http://+:80
-      ConnectionStrings__DefaultConnection: Server=sql-server,1433;Database=SmartHouse;User Id=sa;Password=SmartHome_local_2026!;TrustServerCertificate=True
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=SmartHouse;Username=smarthome;Password=SmartHome_local_2026!
     ports:
       - "5200:80"
     depends_on:
-      sql-server:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/80'"]
@@ -48,17 +48,18 @@ services:
       retries: 20
       start_period: 10s
 
-  sql-server:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: SmartHome_local_2026!
+      POSTGRES_DB: SmartHouse
+      POSTGRES_USER: smarthome
+      POSTGRES_PASSWORD: SmartHome_local_2026!
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sql-data:/var/opt/mssql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'SmartHome_local_2026!' -C -Q 'SELECT 1' || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U smarthome -d SmartHouse"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -85,5 +86,5 @@ services:
       start_period: 10s
 
 volumes:
-  sql-data:
+  postgres-data:
   rabbitmq-data:
