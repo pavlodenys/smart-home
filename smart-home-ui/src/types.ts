@@ -10,7 +10,8 @@ export interface SensorData {
 export interface DeviceData{
     id: number;
     name: string;
-    isActive: string;
+    description: string;
+    isActive: boolean;
 }
 
 export interface ChartData {

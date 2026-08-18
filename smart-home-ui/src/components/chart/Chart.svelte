@@ -20,6 +20,7 @@
     updateDataChart,
     getFirstPoint,
     crateZoom,
+    syncTrackerToDomain,
   } from "./d3Utils";
 
   //TODO: add real-time update
@@ -41,8 +42,42 @@
   const scaleParamMin = 0.97;
   const scaleParam = 1.03;
 
+  // shared with the reactive block below so server-paged points can be merged in after mount
+  let allPoints: any[] = [];
+  let x, y, svg, svgMinimap, xAxisSvg, yAxisSvg, margin, minimapLine, minimapXScale, minimapYScale;
+  let tracker, trackerWidth, svgWidth;
+
+  // merge newly fetched pages (loaded via panning) into the chart once mounted
+  $: if (svg && chart?.data && chart.data !== allPoints) {
+    const existingIds = new Set(allPoints.map((p: any) => p.id));
+    const newPoints = chart.data.filter((p: any) => !existingIds.has(p.id));
+
+    if (newPoints.length) {
+      allPoints = [...allPoints, ...newPoints];
+      filterPoints(allPoints, selectedDate, chartId, chart.id).then((filtered) => {
+        updateDataChart(
+          chartId,
+          filtered,
+          x,
+          y,
+          xAxisSvg,
+          yAxisSvg,
+          svg,
+          margin,
+          svgMinimap,
+          minimapLine,
+          minimapXScale,
+          minimapYScale
+        );
+        if (tracker) {
+          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+        }
+      });
+    }
+  }
+
   onMount(async () => {
-    const allPoints = chart.data;
+    allPoints = chart.data;
 
     connection.start().catch((err) => console.error(err));
 
@@ -72,6 +107,9 @@
           minimapXScale,
           minimapYScale
         );
+        if (tracker) {
+          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+        }
       }
     });
 
@@ -93,9 +131,9 @@
     //   return;
     // }
 
-    var trackerWidth = 20;
+    trackerWidth = 20;
     var trackerHeight = 50;
-    const margin = { top: 5, right: 5, bottom: 30, left: 15 };
+    margin = { top: 5, right: 5, bottom: 30, left: 15 };
     const width = 460 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
     const minimapHeight = 50;
@@ -120,20 +158,18 @@
       d3.max(points, (d: any) => d.value),
     ];
 
-    const { x, y } = createScales(width, height, xDomain, yDomain);
-    //x = x1;
-    //y = y1;
-    const { x: minimapXScale, y: minimapYScale } = createScales(
+    ({ x, y } = createScales(width, height, xDomain, yDomain));
+    ({ x: minimapXScale, y: minimapYScale } = createScales(
       minimapWidth,
       minimapHeight,
       xDomainMap,
       yDomainMap
-    );
+    ));
 
     const xAxis = createAx(x, d3.axisBottom, 5, d3.timeFormat("%H-%M-%S"));
     const yAxis = createAx(y, d3.axisLeft, 5);
 
-    const svgWidth = width + margin.left + margin.right + 20;
+    svgWidth = width + margin.left + margin.right + 20;
     const svgHeigth = height + margin.top + margin.bottom + 10;
 
     const svgMinimapHeigth = minimapHeight + margin.top + margin.bottom + 10;
@@ -146,14 +182,14 @@
       ])
       .on("end", brushed);
 
-    const svg = createSVG(`#chart-${chartId}`, svgWidth, svgHeigth, margin);
-    const svgMinimap = createSVG(
+    svg = createSVG(`#chart-${chartId}`, svgWidth, svgHeigth, margin);
+    svgMinimap = createSVG(
       `#minimap-${chartId}`,
       svgWidth,
       svgMinimapHeigth,
       margin
     );
-    const xAxisSvg = svg
+    xAxisSvg = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, ${height})`)
       .call(xAxis);
@@ -162,7 +198,7 @@
       .selectAll(".tick text")
       .attr("transform", "translate(-10, 0) rotate(-40)") // Rotate the tick labels by -40 degrees
       .style("text-anchor", "end");
-    const yAxisSvg = svg
+    yAxisSvg = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, 0)`)
       .call(yAxis);
@@ -180,8 +216,21 @@
       );
 
       if (!filteredPoints || !filteredPoints.length) {
-        d3.select(".line").remove();
-        d3.selectAll(`.dot-${chartId}`).remove();
+        // scope cleanup to this chart's own svg/minimap so other charts on the page aren't affected
+        svg.select(".line").remove();
+        svg.selectAll(`.dot-${chartId}`).remove();
+        svgMinimap.select(".line").remove();
+        xAxisSvg.selectAll("*").remove();
+        yAxisSvg.selectAll("*").remove();
+
+        svg.select(".no-data-label").remove();
+        svg
+          .append("text")
+          .attr("class", "no-data-label")
+          .attr("x", width / 2)
+          .attr("y", height / 2)
+          .attr("text-anchor", "middle")
+          .text("No data for this date");
         return;
       }
       // console.log(xAxis);
@@ -199,6 +248,7 @@
         minimapXScale,
         minimapYScale
       );
+      syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
     });
 
     svg
@@ -216,23 +266,25 @@
       .attr("clip-path", "url(#chart-area-clip)");
 
     const valueLine = createValueLine(x, y);
-    const minimapLine = createValueLine(minimapXScale, minimapYScale);
+    minimapLine = createValueLine(minimapXScale, minimapYScale);
     const path = createPath(chartArea, points, valueLine, margin);
     const miniMapPath = createPath(svgMinimap, points, minimapLine, margin);
 
-    const tracker = createTracker(
+    const circle1 = createCircle(chartId, chartArea, points, margin, x, y);
+
+    tracker = createTracker(
       svgMinimap,
       trackerWidth,
       trackerHeight,
       svgWidth
     );
-
-    const circle1 = createCircle(chartId, chartArea, points, margin, x, y);
+    syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
 
     const drag = createDragger(
       tracker,
       path,
-      circle1,
+      chartArea,
+      chartId,
       width,
       margin,
       minimapXScale,

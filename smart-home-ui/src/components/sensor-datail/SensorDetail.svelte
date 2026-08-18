@@ -49,12 +49,27 @@
 
   const updateChartData = async (e) => {
     const result = await httpFetch.get(
-      `api/home/sensors/${e.detail.dataId}/data/${e.detail.page}/${count}`
+      `api/sensor/${e.detail.dataId}/data/${e.detail.page}/${count}`
     );
 
-    let chartData = sensor.chartData.find((x) => x.id === e.detail.dataId);
+    if (!Array.isArray(result) || !result.length) {
+      return;
+    }
 
-    chartData.data = result;
+    // reassign sensor (rather than mutating in place) so Svelte propagates the new points to Chart
+    sensor = {
+      ...sensor,
+      chartData: sensor.chartData.map((chartData) => {
+        if (chartData.id !== e.detail.dataId) {
+          return chartData;
+        }
+
+        const existingIds = new Set((chartData.data ?? []).map((point) => point.id));
+        const newPoints = result.filter((point) => !existingIds.has(point.id));
+
+        return { ...chartData, data: [...(chartData.data ?? []), ...newPoints] };
+      }),
+    };
   };
 
   const connectToData = () => {
@@ -138,8 +153,11 @@
   }
 
   const deleteData = async (index: number) => {
-    let result = await httpFetch.delete(`api/sensor/${index}/data`);
-    if (result) console.log(result);
+    if (!window.confirm("Delete this data source and its readings? This cannot be undone.")) return;
+    const result = await httpFetch.delete(`api/sensor/${index}/data`);
+    if (typeof result === "number" && result > 0) {
+      sensor = { ...sensor, chartData: sensor.chartData.filter((data) => data.id !== index) };
+    }
   };
 </script>
 

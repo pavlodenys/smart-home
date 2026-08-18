@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { push } from "svelte-spa-router";
   import { httpFetch } from "../../api/httpServise";
+  import { isRegistrationFormValid } from "./registration";
 
 
   let username = "";
@@ -8,28 +10,50 @@
   let lastName = "";
   let password = "";
   let confirmPassword = "";
+  let error = "";
 
   const register = async () => {
-     const response = await httpFetch.post('api/auth/register', {
-           username,
-            email,
-            firstName,
-            lastName,
-            password,
-            confirmPassword
-        });
+    error = "";
 
-        if(response.success){
-            console.log("OK!");
-        } else {
-            console.log(response);
-        }
+    if (!validateForm()) {
+      error = "Complete all fields and make sure the passwords match.";
+      return;
+    }
+
+    const response = await httpFetch.post("api/auth/register", {
+      username,
+      email,
+      firstName,
+      lastName,
+      password,
+      confirmPassword,
+    });
+
+    if (response?.token) {
+      localStorage.setItem(
+        "accessToken",
+        JSON.stringify({ accessToken: response.token }),
+      );
+      push("/dashboard");
+      return;
+    }
+
+    try {
+      error = JSON.parse(response)?.message ?? "Registration failed.";
+    } catch {
+      error = "Registration failed.";
+    }
   };
 
   const validateForm = () => {
-    // Add form validation logic here
-
-    return true;
+    return isRegistrationFormValid({
+      username,
+      email,
+      firstName,
+      lastName,
+      password,
+      confirmPassword,
+    });
   };
 </script>
 
@@ -60,8 +84,11 @@
       Confirm Password:
       <input type="password" bind:value={confirmPassword} on:input={validateForm} />
     </label>
-    <button type="submit" disabled={validateForm()}>Register</button>
+    <button type="submit" disabled={!validateForm()}>Register</button>
   </form>
+  {#if error}
+    <p class="error">{error}</p>
+  {/if}
 </div>
 
 <style>
@@ -111,8 +138,8 @@
     background-color: #4b47ed;
   }
 
-  /* .register .error {
+  .register .error {
     color: red;
     margin-top: 5px;
-  } */
+  }
 </style>

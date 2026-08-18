@@ -56,15 +56,16 @@ namespace SmatHome.Connector
 
         private static DateTime GetTime(PointDto? point)
         {
-            DateTime? dateTime = null;
-
             if (point != null && point.Time != 0)
             {
                 var unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-                dateTime = unixEpoch.AddSeconds(point.Time).ToLocalTime();
+                // keep this as UTC; converting to the container's "local" time (which is UTC
+                // in Docker) doesn't match the viewer's actual local timezone
+                return unixEpoch.AddSeconds(point.Time);
             }
-            return dateTime != null ? dateTime.Value : DateTime.Now;
+
+            return DateTime.UtcNow;
         }
     }
 }

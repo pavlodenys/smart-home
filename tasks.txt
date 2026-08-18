@@ -1,0 +1,5 @@
+what will be most simple way to add such scenarion - if moisture fall under some value - send notification to my iphone?
+
+fix critical obvious issues - delete not works, some pages return 404 error, it not possible to add device from UI, also enhance UI a bit
+
+add sensor/device scanning - show in dropdown device/sensors which is not connected to changes, items and allow asign them only once also after remove - release them

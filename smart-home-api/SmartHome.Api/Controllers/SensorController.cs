@@ -52,11 +52,12 @@ namespace SmartHome.Api.Controllers
         public async Task<IActionResult> GetSensorDetails(int id, string date)
         {
             var filterDate = DateTime.Parse(date);
+            var nextDay = filterDate.AddDays(1);
             var sensor = await _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
 
             foreach (var data in sensor.ChartData)
             {
-                data.Data = data.Data?.Where(x => x.DateTime >= filterDate).ToArray();
+                data.Data = data.Data?.Where(x => x.DateTime >= filterDate && x.DateTime < nextDay).ToArray();
             }
             _logger.Log(LogLevel.Information, "Get Sensors Details");
 
@@ -109,30 +110,30 @@ namespace SmartHome.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public IActionResult DeleteSensor(int id)
+        public async Task<IActionResult> DeleteSensor(int id)
         {
             var entity = _repo.GetById(id); // TODO: delete by id
             if (entity != null)
             {
-                var deleteResult = _repo.Delete(entity);
+                var deleteResult = await _repo.Delete(entity);
                 return Ok(deleteResult);
             }
 
-            return Ok(false);
+            return NotFound();
         }
 
         [HttpDelete]
         [Route("{id}/data")]
-        public IActionResult DeleteSensorData(int id)
+        public async Task<IActionResult> DeleteSensorData(int id)
         {
             var entity = _chartRepo.GetById(id); // TODO: delete by id
             if (entity != null)
             {
-                var deleteResult = _chartRepo.Delete(entity);
+                var deleteResult = await _chartRepo.Delete(entity);
                 return Ok(deleteResult);
             }
 
-            return Ok(false);
+            return NotFound();
         }
     }
 }

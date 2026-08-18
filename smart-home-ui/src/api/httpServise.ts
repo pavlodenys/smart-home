@@ -45,8 +45,8 @@ export const httpFetch = {
     post: async (url, data) => {
         return await httpMethod("POST", url, data);
     },
-    patch: async (url, data) => {
-        return await httpMethod("POST", url, data);
+    patch: async (url, data = null) => {
+        return await httpMethod("PATCH", url, data);
     },
     put: async (url, data) => {
         return await httpMethod("PUT", url, data);

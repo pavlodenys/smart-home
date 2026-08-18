@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Router from "svelte-spa-router";
+  import Router, { location } from "svelte-spa-router";
   import { getJwtToken, cleanJwtToken } from "./api/auth";
-  import { redirect } from "./redirects";
   import { push } from "svelte-spa-router";
   import { routes } from "./routes";
 
@@ -16,10 +15,6 @@
     console.log(authenticated);
   });
 
-  const requireAuth = () => {
-    redirect(authenticated);
-  };
-
   const logout = () => {
     authenticated = false;
     cleanJwtToken();
@@ -27,8 +22,6 @@
   };
 
   const routeLoading = (event) => {
-    console.log(event);
-
     if (
       event.detail.route === "/forgot-password" ||
       event.detail.route === "/register"
@@ -53,8 +46,6 @@
   };
 
   const conditionsFailed = (event) => {
-    console.log(event);
-
     // Perform any action, for example replacing the current route
     if (!event.detail.userData) {
       let returnUrl;
@@ -64,8 +55,9 @@
   };
 </script>
 
-<nav class="topbar">
-  <a href="/" class="logo">
+<nav class="topbar" aria-label="Main navigation">
+  <a href="/#/" class="brand" aria-label="Smart Home home">
+    <span class="logo">
     <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
       <rect width="100%" height="100%" fill="#646cff5a" rx="10" ry="10" />
       <rect x="25%" y="25%" width="50%" height="50%" fill="#007aff" />
@@ -73,32 +65,31 @@
       <circle cx="50%" cy="50%" r="30%" fill="#007aff" />
       <rect x="35%" y="40%" width="30%" height="20%" fill="#fff" />
     </svg>
+    </span>
+    <span>Smart Home</span>
   </a>
   <div class="links">
-    <a href="/#/dashboard">Dashboard</a>
-    <a href="/#/dashboard/devices">Devices</a>
-    <a href="/#/dashboard/sensors">Sensors</a>
-    <a href="/#/settings">Settings</a>
-    <a href="/#/reports">Reports</a>
-    <a href="/#/help">Help</a>
+    <a class:active={$location === "/dashboard"} href="/#/dashboard">Dashboard</a>
+    <a class:active={$location === "/dashboard/devices"} href="/#/dashboard/devices">Devices</a>
+    <a class:active={$location === "/dashboard/sensors"} href="/#/dashboard/sensors">Sensors</a>
+    <a class:active={$location === "/settings"} href="/#/settings">Settings</a>
+    <a class:active={$location === "/reports"} href="/#/reports">Reports</a>
+    <a class:active={$location === "/help"} href="/#/help">Help</a>
 
     {#if !authenticated}
       <a href="/#/login">Login</a>
     {/if}
     {#if authenticated}
-      <a href="/#/profile">Profile</a>
-      <button  on:click={logout}>Logout</button>
+      <a class:active={$location === "/profile"} href="/#/profile">Profile</a>
+      <button class="nav-button" on:click={logout}>Logout</button>
     {/if}
   </div>
 </nav>
 
-<!-- <Router
-  {routes}
-  on:routeLoading={routeLoading}
-  on:conditionsFailed={conditionsFailed}
-/> -->
-<Router
-  {routes}
-  on:routeLoading={routeLoading}
-  on:conditionsFailed={conditionsFailed}
-/>
+<main class="app-content">
+  <Router
+    {routes}
+    on:routeLoading={routeLoading}
+    on:conditionsFailed={conditionsFailed}
+  />
+</main>

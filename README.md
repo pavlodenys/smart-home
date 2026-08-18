@@ -13,7 +13,24 @@ The smart home project includes the following features:
 
 ## Getting Started
 
-To get started with the smart home project, you will need to clone this repository and set up the backend and frontend components.
+The complete local stack runs with Docker Compose. Docker Desktop is the only required runtime.
+
+```powershell
+docker compose up --build -d
+```
+
+Open the UI at `http://localhost:5173`. The API and Swagger UI are available at
+`http://localhost:5200` and `http://localhost:5200/swagger`.
+
+RabbitMQ management is available at `http://localhost:15672` with the local
+development credentials `rmuser` / `rmpassword`.
+
+To follow the services or stop the stack:
+
+```powershell
+docker compose logs -f
+docker compose down
+```
 
 ### Backend Setup
 

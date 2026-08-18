@@ -31,7 +31,9 @@ namespace SmartHome.Api
             //services.AddDbContext<SmartHomeDbContext>(options => options
             //        .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddTransient<SmartHomeDbContext>();
+            services.AddTransient(_ => new SmartHomeDbContext(
+                Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.")));
 
             //Entity classes and Dto classes names should starts from common world. Othewise, you will add a lot of code.
             var typeEntity = typeof(DataAssembly).Assembly.GetTypes()
@@ -46,7 +48,7 @@ namespace SmartHome.Api
                 var repositoryType = typeof(Repository<,>).MakeGenericType(entityClass, typeDto);
                 var repositoryInterface = typeof(IRepository<,>).MakeGenericType(entityClass,typeDto);
 
-                services.AddSingleton(repositoryInterface, repositoryType);
+                services.AddTransient(repositoryInterface, repositoryType);
             }
 
             services.AddSingleton<ScenarioService>();
@@ -144,16 +146,6 @@ namespace SmartHome.Api
         {
             // var context = app.ApplicationServices.GetRequiredService<Context>();
             app.UseCors(builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-
-            //using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
-            //{
-            //    var context = serviceScope.ServiceProvider.GetRequiredService<SmartHomeDbContext>();
-
-            //    if (context.Database.EnsureCreated())
-            //    {
-            //        context.Database.Migrate();
-            //    }
-            //}
 
             if (env.IsDevelopment())
             {

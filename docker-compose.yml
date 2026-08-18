@@ -1,29 +1,89 @@
-version: "3.9"
 services:
   smart-home-ui:
     image: smarthomefrontend
     build:
       context: smart-home-ui
       dockerfile: Dockerfile
-    environment: 
-      - backendUrl=http://backend
     ports:
       - "5173:5173"
-    depends_on: 
+    depends_on:
       - smart-home-api
+
   smart-home-connector:
     image: smarthomeconnector
     build:
       context: smart-home-api
       dockerfile: ./SmartHome.Connector/Dockerfile
-    depends_on: 
-      - smart-home-api      
+    environment:
+      ConnectionStrings__DefaultConnection: Server=sql-server,1433;Database=SmartHouse;User Id=sa;Password=SmartHome_local_2026!;TrustServerCertificate=True
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Username: rmuser
+      RabbitMQ__Password: rmpassword
+      RabbitMQ__ExchangeName: amq.topic
+      RabbitMQ__QueueName: sensors_data
+      SignalR__HubUrl: http://smart-home-api/hub
+    depends_on:
+      smart-home-api:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   smart-home-api:
     image: smarthomebackend
     build:
       context: smart-home-api
       dockerfile: ./SmartHome.Api/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: Server=sql-server,1433;Database=SmartHouse;User Id=sa;Password=SmartHome_local_2026!;TrustServerCertificate=True
     ports:
       - "5200:80"
-      - "7138:443"
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/80'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: SmartHome_local_2026!
+    ports:
       - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'SmartHome_local_2026!' -C -Q 'SELECT 1' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:3.11.9-management
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: rmuser
+      RABBITMQ_DEFAULT_PASS: rmpassword
+    command: /bin/sh -c "rabbitmq-plugins enable --offline rabbitmq_mqtt && rabbitmq-server"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+      - "1883:1883"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  sql-data:
+  rabbitmq-data:

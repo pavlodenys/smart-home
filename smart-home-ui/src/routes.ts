@@ -1,5 +1,3 @@
-import { wrap } from "svelte-spa-router/wrap";
-import Dashboard from "./components/dashboard/Dashboard.svelte";
 import Login from "./components/Login.svelte";
 import Home from "./components/Home.svelte";
 import NotFound from "./components/NotFound.svelte";
@@ -13,6 +11,10 @@ export const routes = {
     "/": Home,
     "/dashboard": wrapAuth(() =>
         import("./components/dashboard/Dashboard.svelte")),
+    "/dashboard/devices": wrapAuth(() =>
+        import("./components/devices/DevicesPage.svelte")),
+    "/dashboard/sensors": wrapAuth(() =>
+        import("./components/sensors/SensorsPage.svelte")),
     "/sensor": wrapAuth(() =>
             import("./components/sensor-datail/SensorDetail.svelte"),
     ),
@@ -21,6 +23,12 @@ export const routes = {
     ),
     "/reports": wrapAuth(() =>
         import("./components/reports/Reports.svelte"),
+    ),
+    "/settings": wrapAuth(() =>
+        import("./components/settings/Settings.svelte"),
+    ),
+    "/profile": wrapAuth(() =>
+        import("./components/profile/Profile.svelte"),
     ),
     "/help": Help,
     "/register": Register,

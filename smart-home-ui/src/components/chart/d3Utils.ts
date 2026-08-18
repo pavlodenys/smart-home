@@ -3,6 +3,9 @@ import type { PointDto } from "../../types";
 import * as d3 from "d3";
 import moment from "moment";
 import { httpFetch } from "../../api/httpServise";
+import { getFirstPoint } from "./chartDates";
+
+export { getFirstPoint } from "./chartDates";
 
 let timeoutId;
 
@@ -59,8 +62,24 @@ export const createTracker = (svgElement, width, height, translateX) => {
         .attr("transform", `translate(${translateX - 45}, 0)`)
         .style("fill", "transparent")
         .style("stroke", "blue")
-        .style("stroke-width", 1);
+        .style("stroke-width", 1)
+        // a "transparent" fill is not painted, so without this the drag only registers on the 1px stroke
+        .style("pointer-events", "all")
+        .style("cursor", "grab");
     return tracker;
+};
+
+// aligns the minimap tracker box with the window currently shown by the main chart's x scale.
+// anchored to the window's END (not start): the main chart's start is a recent-window heuristic
+// (see getFirstPoint) that doesn't line up with the minimap's full-range domain, but the end of
+// the window is always "now"/the latest loaded point, so anchoring there keeps the box flush
+// against the right edge whenever the user is looking at the latest data (as expected).
+export const syncTrackerToDomain = (tracker, minimapXScale, mainX, trackerWidth, minimapElementWidth) => {
+    const [, windowEnd] = mainX.domain();
+    const rawX = minimapXScale(windowEnd) - trackerWidth;
+    const clampedX = Math.max(0, Math.min(rawX, minimapElementWidth - trackerWidth));
+
+    tracker.attr("transform", `translate(${clampedX}, 0)`);
 };
 
 export const createCircle = (chartId, svgElement, points, margin, x, y) => {
@@ -113,7 +132,8 @@ export const itemsInRange = (d, xValue, inverted, x) => {
 export const createDragger = (
     tracker,
     path,
-    circle,
+    chartArea,
+    dotClassId,
     width,
     margin,
     minimapXScale,
@@ -121,130 +141,90 @@ export const createDragger = (
     x,
     y,
     xAxis,
-    chartId,
+    dataId,
     dispatch
 ) => {
+    const [domainStart, domainEnd] = x.domain();
+    const domainSpan = domainEnd.getTime() - domainStart.getTime();
+    // tracks how many extra pages of older points have already been requested from the server
+    let loadedPage = 1;
+    let lastClampedXPos = 0;
+
     const drag = d3
         .drag()
         .on("start", function () {
             tracker.style("cursor", "grabbing");
         })
-        .on("drag", function (d) {
+        .on("drag", function (event) {
             cancelAnimationFrame(timeoutId);
             timeoutId = requestAnimationFrame(() => {
-                let updatedXDomain;
-                let xPos = d.x;
-                let minimapElementWidth = width + margin.right + 20;
-                let xValue = minimapXScale.invert(xPos);
-                //let clampedXPos = d3.clamp(0, minimapWidth - trackerWidth, xPos);
-                let clampedXPos = Math.max(
+                const minimapElementWidth = width + margin.right + 20;
+                const clampedXPos = Math.max(
                     0,
-                    Math.min(xPos, minimapElementWidth - trackerWidth)
+                    Math.min(event.x, minimapElementWidth - trackerWidth)
                 );
+                lastClampedXPos = clampedXPos;
 
-                // console.log(`${xPos} ${minimapElementWidth} ${trackerWidth}`);
-                //console.log(clampedXPos);
-
-                //tracker.attr("x", clampedXPos);
                 tracker.attr("transform", `translate(${clampedXPos}, 0)`);
-                if (d.dx === 1) {
-                    updatedXDomain = x.domain(
-                        x.domain().map((d) => new Date(d.getTime() + 5000))
-                    );
-                    // y.domain();
-                } else if (d.dx === -1) {
-                    updatedXDomain = x.domain(
-                        x.domain().map((d) => new Date(d.getTime() - 5000))
-                    );
-                    //y.domain(d3.extent(y.ticks));
-                }
-                //const xAxisGroup = xAxis.select(".x-axis");
-                const updatedXAxis = d3.axisBottom(updatedXDomain);
-                // .tickFormat(d3.timeFormat("%d %b"));
-                xAxis.call(updatedXAxis);
 
-                // let xData = d3.line<PointDto>().x((point) => {
-                //   return itemsInRange(
-                //     point,
-                //     xValue,
-                //     x.invert(width),
-                //     x(new Date(formatDate(point.dateTime)))
-                //   );
-                // });
+                // shift the main chart's visible window to match the tracker position
+                const windowStart = minimapXScale.invert(clampedXPos);
+                const windowEnd = new Date(windowStart.getTime() + domainSpan);
+                x.domain([windowStart, windowEnd]);
 
-                // console.log(xData);
+                xAxis.call(d3.axisBottom(x));
+                xAxis
+                    .selectAll(".tick text")
+                    .attr("transform", "translate(-10, 0) rotate(-40)")
+                    .style("text-anchor", "end");
 
                 path.attr(
                     "d",
                     d3
                         .line<PointDto>()
-                        .x((point) => {
-                            return itemsInRange(
-                                point,
-                                xValue,
-                                x.invert(width),
-                                x(new Date(formatDate(point.dateTime)))
-                            );
-                        })
-                        .y((point) => {
-                            return y(point.value);
-                        })
+                        .x((point) => x(new Date(formatDate(point.dateTime))))
+                        .y((point) => y(point.value))
                 );
 
-                circle
-                    .attr("cx", (point) => {
-                        return itemsInRange(
-                            point,
-                            xValue,
-                            x.invert(width),
-                            x(new Date(formatDate(point.dateTime)))
-                        );
-                    })
-                    .attr("cy", (point) => {
-                        return itemsInRange(
-                            point,
-                            xValue,
-                            x.invert(width),
-                            y(point.value)
-                        );
-                    });
+                // re-select fresh each frame: new real-time/paged points are added as separate
+                // circles by updateDataChart and wouldn't be picked up by a stale selection
+                chartArea
+                    .selectAll(`.dot-${dotClassId}`)
+                    .attr("cx", (point) => x(new Date(formatDate(point.dateTime))))
+                    .attr("cy", (point) => y(point.value));
             });
         })
-        .on("end", (e) => {
-            // console.log(e);
-            dispatch("chartEvent", { dataId: chartId, page: 1 });
+        .on("end", () => {
             tracker.style("cursor", "grab");
+
+            // only fetch more data once the tracker has been dragged to the earliest loaded point
+            if (lastClampedXPos <= 1) {
+                loadedPage += 1;
+                dispatch("chartEvent", { dataId, page: loadedPage });
+            }
         });
 
     return drag;
 };
 
 export const filterPoints = async (points, date, chartId, chartIndex) => {
-    let filtered = points.filter((point) => {
+    let filtered = (points ?? []).filter((point) => {
         const pointDate = new Date(point.dateTime);
         return moment(pointDate).format("YYYY-MM-DD") === date;
     });
 
     if (!filtered.length) {
-        let sensor = await httpFetch.get(`api/home/sensors/${chartIndex}/${date}`);
-        filtered = sensor.chartData[chartId].data;
+        const sensor = await httpFetch.get(`api/sensor/${chartIndex}/${date}`);
+        // match by data source id rather than array position, since the response order isn't guaranteed
+        const matchingChart = sensor?.chartData?.find((c) => c.id === chartIndex) ?? sensor?.chartData?.[chartId];
+        filtered = matchingChart?.data ?? [];
     }
 
-    return filtered;
-};
-
-export const getFirstPoint = (points: any) => {
-    if (points && points.length) {
-        if (points.length > 30) {
-            return new Date(
-                new Date(points[points.length - 1].dateTime).getTime() -
-                20 * 60 * 1000
-            );
-        }
-        return points[0].dateTime;
-    } else {
-        return new Date();
-    }
+    // getFirstPoint/domain calculations assume chronological order, but real-time pushes and
+    // paged/panned data are simply appended, so this can't be relied on without sorting here
+    return [...filtered].sort(
+        (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
+    );
 };
 
 export const updateDataChart = (
@@ -264,6 +244,9 @@ export const updateDataChart = (
     if (!data || !data.length) {
         return;
     }
+
+    svg.select(".no-data-label").remove();
+
     //console.log(data.length);
     const firtPoint = getFirstPoint(data);
     const xDomain = [
@@ -309,27 +292,23 @@ export const updateDataChart = (
     }
 
     // Redraw the line with the new data and scales
-    line
-        .transition()
-        .duration(1000)
-        .attr(
-            "d",
-            d3
-                .line()
-                .x((d: any) => x(new Date(formatDate(d.dateTime))))
-                .y((d: any) => y(d.value))
-        );
+    // no transition here: tweening the "d" attribute as a raw string between
+    // datasets of different sizes/dates produces a garbled zigzag artifact
+    line.attr(
+        "d",
+        d3
+            .line()
+            .x((d: any) => x(new Date(formatDate(d.dateTime))))
+            .y((d: any) => y(d.value))
+    );
     //console.log(minix(new Date(formatDate(data[0].dateTime))));
-    miniline
-        .transition()
-        .duration(1000)
-        .attr(
-            "d",
-            d3
-                .line()
-                .x((d: any) => minix(new Date(formatDate(d.dateTime))))
-                .y((d: any) => miniy(d.value))
-        );
+    miniline.attr(
+        "d",
+        d3
+            .line()
+            .x((d: any) => minix(new Date(formatDate(d.dateTime))))
+            .y((d: any) => miniy(d.value))
+    );
 
     // Select the circles and bind the new data to them
     let circles = svg.selectAll(`.dot-${chartId}`).data(data);
@@ -351,6 +330,9 @@ export const updateDataChart = (
             .attr("cy", (d) => y(d.value))
             .attr("r", 5) // specify the radius or any other attributes for the new circles
             .attr("fill", "blue"); // specify the fill color or any other style for the new circles
+
+        // remove leftover dots from a smaller/older dataset
+        circles.exit().remove();
     } else {
         circles = createCircle(chartId, svg, data, margin, x, y);
     }
