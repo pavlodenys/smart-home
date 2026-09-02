@@ -3,6 +3,7 @@
 // - connect ESP to Windows 10(need to install proper driver)
 // - baund - 9600
 
+#include "config.h"
 #include <SPI.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
@@ -24,16 +25,6 @@ struct Point
 };
 //const DateTime &dt;
 
-
-const char *ssid = "network"; // Enter SSID here
-const char *password = "11111111";
-
-// const char *broker = "192.168.0.151";
-const char *broker = "192.168.3.21";
-const int port = 1883;
-
-const char *user = "rmuser";
-const char *pass = "rmpassword";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -59,7 +50,7 @@ void setup()
   dht.begin();
 
   Serial.println("Connecting to ");
-  Serial.println(ssid);
+  Serial.println("Connecting to Wi-Fi...");
 
   // connect to your local wi-fi network
   WiFi.begin(ssid, password);

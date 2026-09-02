@@ -17,11 +17,16 @@ on `A0`; a bare ESP8266 ADC accepts only about 1.0 V and needs an external divid
 
 ## Configuration
 
-Edit `include/config.h` before flashing:
+Copy the committed example to the ignored local configuration, then edit it
+before flashing:
+
+```powershell
+Copy-Item include/config.example.h include/config.h
+```
 
 - Wi-Fi SSID and password
 - RabbitMQ/MQTT host and credentials
-- `SOIL_SENSOR_ID` if ID `4` is already used
+- `SOIL_DATA_ID` if ID `4` is already used
 - dry and wet ADC calibration values
 
 To calibrate, read the serial output with the probe completely dry and record the

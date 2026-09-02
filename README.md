@@ -22,8 +22,14 @@ docker compose up --build -d
 Open the UI at `http://localhost:5173`. The API and Swagger UI are available at
 `http://localhost:5200` and `http://localhost:5200/swagger`.
 
-RabbitMQ management is available at `http://localhost:15672` with the local
-development credentials `rmuser` / `rmpassword`.
+RabbitMQ management is available at `http://localhost:15672`. Its local username
+and password are read from the ignored root `.env` file. For a fresh local setup,
+generate random service credentials before starting Compose:
+
+```powershell
+Copy-Item .env.example .env
+.\scripts\rotate-local-secrets.ps1
+```
 
 To follow the services or stop the stack:
 

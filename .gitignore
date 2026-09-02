@@ -2,6 +2,11 @@
 logs
 *.log
 .env
+.env.*
+!.env.example
+
+# Device credentials are local-only. Commit config.example.h instead.
+sensors/**/include/config.h
 
 # Editor directories and files
 .vs/*

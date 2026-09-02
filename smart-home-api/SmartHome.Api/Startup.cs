@@ -83,6 +83,12 @@ namespace SmartHome.Api
             services.AddScoped<SignInManager<HomeUser>>();
             services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+            var jwtKey = Configuration["Jwt:Key"];
+            if (string.IsNullOrWhiteSpace(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+            {
+                throw new InvalidOperationException("Jwt:Key is required and must be at least 32 bytes.");
+            }
+
             var tokenValidatorParameters = new TokenValidationParameters
             {
                 //ValidateIssuer = true,
@@ -94,7 +100,7 @@ namespace SmartHome.Api
                 //IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["Jwt:Key"] ?? "jwt_key")),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
                 ValidateIssuer = false,
                 ValidateAudience = false,
                 ClockSkew = TimeSpan.Zero

@@ -122,7 +122,7 @@ Status as of 2026-09-02:
 | # | Preparation task | Status |
 | --- | --- | --- |
 | 1 | Upgrade unsupported runtimes | **Complete** |
-| 2 | Remove secrets from source and rotate them | Not started |
+| 2 | Remove secrets from source and rotate them | **Partially complete** — Wi-Fi rotation and device reflashing remain |
 | 3 | Add an authenticated ingestion endpoint | Not started |
 | 4 | Make webhook delivery idempotent | Not started |
 | 5 | Move scenario evaluation into the ingestion flow | Not started |
@@ -179,7 +179,9 @@ References:
 
 ### 2. Remove secrets from source and rotate them
 
-**Status: Not started.**
+**Status: Partially complete (2026-09-02).** Source externalization and the
+locally controlled PostgreSQL, RabbitMQ, and JWT rotations are complete. The
+physical Wi-Fi password rotation and firmware reflashing require owner action.
 
 Do this before making the repository public or connecting it to a hosted build:
 
@@ -197,6 +199,58 @@ Do this before making the repository public or connecting it to a hosted build:
 The random ntfy topic is a capability secret for this prototype: anyone who
 knows it can publish or subscribe. The current iPhone subscription can remain,
 but the topic must be stored only as a Render secret.
+
+Completed in the repository:
+
+- root Compose, the standalone RabbitMQ Compose file, and API configuration no
+  longer contain literal database, broker, or JWT credentials;
+- `.env.example` defines the required variable names with empty secret values,
+  while `.env` and device `include/config.h` files are ignored;
+- both ESP8266 projects have committed `config.example.h` templates, and DHT11
+  credentials were moved out of `src/main.cpp` without discarding the existing
+  local device settings;
+- the API requires a JWT signing key of at least 32 bytes and no longer falls
+  back to the insecure `jwt_key` value;
+- `scripts/rotate-local-secrets.ps1` generates cryptographically random local
+  PostgreSQL, RabbitMQ, and JWT values without printing them;
+- the existing local PostgreSQL and RabbitMQ accounts were rotated in place,
+  preserving their volumes, and affected services were recreated with
+  `--no-build`;
+- the existing ntfy topic was preserved only in the ignored `.env` file, so the
+  current iPhone subscription remains valid.
+
+Local verification completed on 2026-09-02:
+
+- `docker compose config --quiet` accepted the externalized configuration;
+- PostgreSQL and RabbitMQ became healthy after rotation;
+- the API became healthy and Swagger returned `200 OK`;
+- a PostgreSQL `SELECT 1` succeeded through the recreated service;
+- the Connector restarted and reported both listening and connected SignalR
+  state;
+- a current-tree scan compared tracked and candidate files against nine known
+  historical/local secret values and found zero matches; no private-key marker
+  or insecure JWT/database fallback remained;
+- no application image was rebuilt, as requested. Existing images may still
+  contain revoked values from their old build context and must be rebuilt before
+  deployment.
+
+Owner actions still required before this task can be marked **Complete**:
+
+1. Change the actual Wi-Fi access-point password.
+2. Put the new value in each ignored device `include/config.h` and manually
+   rebuild/reflash the affected ESP8266 devices.
+3. Confirm both devices reconnect and publish successfully.
+4. Before making the Git history public, remove historical credential blobs with
+   a coordinated history rewrite, or create a clean public repository from the
+   sanitized tree. Do this only after every exposed credential has been revoked.
+
+To rotate the local service credentials again while preserving data, start
+PostgreSQL and RabbitMQ and run:
+
+```powershell
+.\scripts\rotate-local-secrets.ps1 -RotateRunningServices
+docker compose up -d --no-build --force-recreate postgres rabbitmq smart-home-api smart-home-connector
+```
 
 ### 3. Add an authenticated ingestion endpoint
 
