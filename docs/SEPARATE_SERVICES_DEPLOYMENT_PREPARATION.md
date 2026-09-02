@@ -212,7 +212,8 @@ Completed in the repository:
 - the API requires a JWT signing key of at least 32 bytes and no longer falls
   back to the insecure `jwt_key` value;
 - `scripts/rotate-local-secrets.ps1` generates cryptographically random local
-  PostgreSQL, RabbitMQ, and JWT values without printing them;
+  PostgreSQL, RabbitMQ, and JWT values without printing them, and synchronizes
+  the new MQTT credential into existing ignored firmware configuration files;
 - the existing local PostgreSQL and RabbitMQ accounts were rotated in place,
   preserving their volumes, and affected services were recreated with
   `--no-build`;
@@ -238,7 +239,9 @@ Owner actions still required before this task can be marked **Complete**:
 
 1. Change the actual Wi-Fi access-point password.
 2. Put the new value in each ignored device `include/config.h` and manually
-   rebuild/reflash the affected ESP8266 devices.
+   rebuild/reflash the affected ESP8266 devices. Broker credential rotation
+   updates those local files automatically, but cannot update already-flashed
+   devices.
 3. Confirm both devices reconnect and publish successfully.
 4. Before making the Git history public, remove historical credential blobs with
    a coordinated history rewrite, or create a clean public repository from the
