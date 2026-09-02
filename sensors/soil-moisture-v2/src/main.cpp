@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 #include <time.h>
@@ -12,6 +13,21 @@ namespace
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 unsigned long lastPublishMs = 0;
+
+void configureOta()
+{
+    ArduinoOTA.setHostname(OTA_HOSTNAME);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
+    ArduinoOTA.onStart([]()
+                       { Serial.println("OTA update starting"); });
+    ArduinoOTA.onEnd([]()
+                     { Serial.println("OTA update complete; restarting"); });
+    ArduinoOTA.onError([](ota_error_t error)
+                       { Serial.printf("OTA update failed, error=%u\n", error); });
+    ArduinoOTA.begin();
+
+    Serial.printf("OTA ready at %s.local\n", OTA_HOSTNAME);
+}
 
 void connectWifi()
 {
@@ -105,6 +121,7 @@ void setup()
 
     connectWifi();
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+    configureOta();
 
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);
     mqttClient.setKeepAlive(30);
@@ -118,6 +135,7 @@ void setup()
 void loop()
 {
     connectWifi();
+    ArduinoOTA.handle();
     if (!mqttClient.connected())
     {
         connectMqtt();

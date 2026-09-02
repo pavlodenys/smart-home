@@ -1,35 +1,136 @@
-#chart {
-    width: 600px;
-    height: 350px;
-    margin-top: 16px;
+.chart-component {
+    min-width: 0;
 }
 
-.line {
+.chart-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 64px;
+    padding-right: 13rem;
+    margin-bottom: 1.25rem;
+}
+
+.chart-heading h3 {
+    margin: 0 0 0.3rem;
+    font-size: 1.08rem;
+}
+
+.chart-heading p {
+    max-width: 42rem;
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.date-filter {
+    display: grid;
+    grid-template-columns: auto minmax(145px, 1fr);
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 750;
+}
+
+.date-filter input {
+    min-height: 40px;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.86rem;
+}
+
+.chart-visual,
+.chart-plot,
+.chart-minimap {
+    width: 100%;
+    min-width: 0;
+}
+
+.chart-visual {
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border);
+}
+
+.chart-plot svg,
+.chart-minimap svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+}
+
+.chart-minimap {
+    margin-top: 0.4rem;
+    padding: 0.25rem 0;
+    border-radius: 6px;
+    background: var(--surface-soft);
+}
+
+.chart-component .line {
     fill: none;
-    stroke: steelblue;
+    stroke: var(--accent);
+    stroke-width: 2.25px;
+}
+
+.chart-component [class^="dot-"] {
+    fill: #fff;
+    stroke: var(--accent);
     stroke-width: 2px;
 }
 
-.dot {
-    fill: steelblue;
-    stroke: steelblue;
+.chart-component .domain,
+.chart-component .tick line {
+    stroke: #cbd9cf;
 }
 
-.line {
-    fill: none;
-    stroke: steelblue;
-    stroke-width: 2px;
+.chart-component .tick text,
+.chart-component .no-data-label {
+    fill: var(--muted);
+    font-family: inherit;
+    font-size: 11px;
+}
+
+.chart-component .brush .selection {
+    fill: rgba(23, 118, 74, 0.12);
+    stroke: var(--accent);
+}
+
+.chart-help {
+    margin: 0.8rem 0 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.chart-empty {
+    display: grid;
+    min-height: 220px;
+    place-items: center;
+    color: var(--muted);
 }
 
 .tooltip {
     position: absolute;
-    background-color: white;
-    border: 1px solid steelblue;
-    padding: 5px 10px;
+    z-index: 50;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--ink);
+    background: var(--surface);
+    box-shadow: var(--shadow);
     font-size: 12px;
     pointer-events: none;
 }
 
-#minimap {
-    background-color: #e4e4e4;
+@media (max-width: 720px) {
+    .chart-toolbar {
+        flex-direction: column;
+        padding-right: 0;
+    }
+
+    .date-filter {
+        width: 100%;
+        grid-template-columns: 1fr;
+    }
 }

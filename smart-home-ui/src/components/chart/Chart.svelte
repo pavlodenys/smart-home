@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, createEventDispatcher, tick } from "svelte";
   import type { ChartData } from "../../types";
   import * as d3 from "d3";
   import moment from "moment";
@@ -42,6 +42,7 @@
 
   let selectedDate = moment().format("YYYY-MM-DD");
   const dispatch = createEventDispatcher();
+  let chartHost: HTMLDivElement;
 
   const scaleParamMin = 0.97;
   const scaleParam = 1.03;
@@ -81,6 +82,7 @@
   }
 
   onMount(async () => {
+    await tick();
     allPoints = chart.data;
 
     connection.start().catch((err) => console.error(err));
@@ -180,9 +182,10 @@
 
     trackerWidth = 20;
     var trackerHeight = 50;
-    margin = { top: 5, right: 5, bottom: 30, left: 15 };
-    const width = 460 - margin.left - margin.right;
-    const height = 300 - margin.top - margin.bottom;
+    margin = { top: 12, right: 18, bottom: 42, left: 42 };
+    const availableWidth = chartHost?.clientWidth || 720;
+    const width = Math.max(280, availableWidth - margin.left - margin.right - 20);
+    const height = Math.max(230, Math.min(310, width * 0.48));
     const minimapHeight = 50;
     const minimapWidth = width;
 
@@ -346,24 +349,21 @@
 
     tracker.call(drag);
 
-    const zoom = crateZoom(width, height, x, y);
+    const zoom = crateZoom(width, height, x, () => {
+      xAxisSvg.call(createAx(x, d3.axisBottom, 5, d3.timeFormat("%H-%M-%S")));
+      xAxisSvg
+        .selectAll(".tick text")
+        .attr("transform", "translate(-10, 0) rotate(-40)")
+        .style("text-anchor", "end");
 
-    svg.call(zoom);
+      path.attr("d", valueLine);
+      chartArea
+        .selectAll(`.dot-${chartId}`)
+        .attr("cx", (point) => x(new Date(formatDate(point.dateTime))))
+        .attr("cy", (point) => y(point.value));
+    });
 
-    svg.on("mousedown", (event) => {
-      console.log(event);
-    });
-    svg.on("wheel", (event) => {
-      console.log(event);
-      const delta = event.deltaY;
-      const scale = delta > 0 ? 1.1 : 0.9;
-      const mouseX = event.clientX - svg.node().getBoundingClientRect().x;
-      const zoomTransform = d3.zoomIdentity
-        .translate(mouseX, 0)
-        .scale(scale)
-        .translate(-mouseX, 0);
-      svg.call(zoom.transform, zoomTransform);
-    });
+    d3.select(svg.node().ownerSVGElement).call(zoom);
 
     function brushed(event) {
       if (!event.sourceEvent) return; // Only transition after input.
@@ -392,16 +392,27 @@
   });
 </script>
 
-<div>
-  <div>{chart.name}</div>
-  <div>
-    <input id="date-{chartId}" type="date" bind:value={selectedDate} />
+<div class="chart-component">
+  <div class="chart-toolbar">
+    <div class="chart-heading">
+      <h3>{chart.name || "Sensor readings"}</h3>
+      {#if chart.description}
+        <p>{chart.description}</p>
+      {/if}
+    </div>
+    <label class="date-filter" for="date-{chartId}">
+      <span>Date</span>
+      <input id="date-{chartId}" type="date" bind:value={selectedDate} />
+    </label>
   </div>
   {#if chart.data}
-    <div id="chart-{chartId}" />
-    <div id="minimap-{chartId}" />
+    <div class="chart-visual" bind:this={chartHost}>
+      <div class="chart-plot" id="chart-{chartId}" />
+      <div class="chart-minimap" id="minimap-{chartId}" />
+      <p class="chart-help">Scroll over the chart to zoom. Drag the lower handle to explore earlier readings.</p>
+    </div>
   {:else}
-    No data available
+    <div class="chart-empty">No readings are available for this data source.</div>
   {/if}
 </div>
 

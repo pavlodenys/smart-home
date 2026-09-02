@@ -25,6 +25,7 @@ Copy-Item include/config.example.h include/config.h
 ```
 
 - Wi-Fi SSID and password
+- a unique `OTA_PASSWORD` for local wireless firmware updates
 - RabbitMQ/MQTT host and credentials
 - `SOIL_DATA_ID` if ID `4` is already used
 - dry and wet ADC calibration values
@@ -40,6 +41,29 @@ pio run
 pio run --target upload
 pio device monitor
 ```
+
+## Wireless firmware updates
+
+Flash the firmware once over USB using the default `nodemcuv2` environment.
+After it connects to Wi-Fi, it advertises as `soil-moisture.local` and accepts
+password-protected updates from the same local network. Add these local-only
+values to `include/config.h`:
+
+```cpp
+constexpr char OTA_HOSTNAME[] = "soil-moisture";
+constexpr char OTA_PASSWORD[] = "a-long-random-ota-password";
+```
+
+Build and upload over Wi-Fi:
+
+```powershell
+$env:OTA_PASSWORD = "your-OTA-password"
+platformio run -e nodemcuv2-ota --target upload --upload-port soil-moisture.local
+```
+
+Use the device IP address in place of `soil-moisture.local` when local DNS does
+not resolve it. Keep OTA on the private Wi-Fi network; it must not be exposed
+through router port forwarding.
 
 If PlatformIO is not installed on the host, build with Docker from the repository
 root. The named volume preserves downloaded ESP8266 toolchains between builds:

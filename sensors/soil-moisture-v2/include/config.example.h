@@ -5,6 +5,10 @@
 constexpr char WIFI_SSID[] = "replace-with-wifi-ssid";
 constexpr char WIFI_PASSWORD[] = "replace-with-wifi-password";
 
+// Used for password-protected wireless firmware updates on the local network.
+constexpr char OTA_HOSTNAME[] = "soil-moisture";
+constexpr char OTA_PASSWORD[] = "replace-with-a-long-random-ota-password";
+
 constexpr char MQTT_HOST[] = "replace-with-mqtt-host";
 constexpr uint16_t MQTT_PORT = 1883;
 constexpr char MQTT_USERNAME[] = "replace-with-mqtt-username";

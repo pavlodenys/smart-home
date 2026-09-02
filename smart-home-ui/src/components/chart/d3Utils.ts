@@ -4,8 +4,8 @@ import * as d3 from "d3";
 import moment from "moment";
 import { httpFetch } from "../../api/httpServise";
 import { getFirstPoint, getSensorDetailsUrl } from "./chartDates";
-
 export { getFirstPoint, getSensorDetailsUrl } from "./chartDates";
+export { crateZoom } from "./chartZoom";
 
 let timeoutId;
 
@@ -31,8 +31,10 @@ export const createSVG = (selector, width, height, margin) => {
     const svg = d3
         .select(selector)
         .append("svg")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .attr("width", "100%")
+        .attr("height", "auto")
+        .attr("preserveAspectRatio", "xMidYMid meet")
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
     return svg;
@@ -338,19 +340,3 @@ export const updateDataChart = (
     }
 };
 
-export const crateZoom = (width, height, xScale, yScale) => {
-    return d3
-        .zoom()
-        .scaleExtent([1, 100])
-        .translateExtent([
-            [0, 0],
-            [width, height],
-        ])
-        .on("zoom", (event) => {
-            const transform1 = event.transform;
-
-            //console.log(transform1);
-            xScale.domain(transform1.rescaleX(xScale).domain());
-            yScale.domain(transform1.rescaleY(yScale).domain());
-        });
-};
