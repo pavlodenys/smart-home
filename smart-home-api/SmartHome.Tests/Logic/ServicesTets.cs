@@ -27,7 +27,9 @@ namespace SmartHome.Tests
             var deviceId = 1;
             var deviceDto = new DeviceDto { Id = deviceId, IsActive = false };
             _repositoryMock.Setup(r => r.GetMapById(deviceId)).Returns(deviceDto);
-           // _repositoryMock.Setup(r => r.Update(deviceId, It.IsAny<DeviceDto>())).Returns(deviceDto);
+            _repositoryMock
+                .Setup(r => r.Update(deviceId, It.IsAny<DeviceDto>()))
+                .ReturnsAsync((int _, DeviceDto updatedDevice) => updatedDevice);
 
             // Act
             var result = await _services.ChangeStatus(deviceId);

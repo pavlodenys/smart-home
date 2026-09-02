@@ -117,19 +117,60 @@ re-check them immediately before deployment:
 
 ## Required Application Preparation
 
+Status as of 2026-09-02:
+
+| # | Preparation task | Status |
+| --- | --- | --- |
+| 1 | Upgrade unsupported runtimes | **Complete** |
+| 2 | Remove secrets from source and rotate them | Not started |
+| 3 | Add an authenticated ingestion endpoint | Not started |
+| 4 | Make webhook delivery idempotent | Not started |
+| 5 | Move scenario evaluation into the ingestion flow | Not started |
+| 6 | Replace Connector-to-SignalR forwarding | Not started |
+| 7 | Add API health and readiness endpoints | Not started |
+| 8 | Configure frontend URLs for production | Not started |
+| 9 | Restrict CORS | Not started |
+| 10 | Add database retention and export | Not started |
+
+Only a task marked **Complete** has been implemented and verified. Provider
+deployment and end-to-end cloud verification have not started.
+
 ### 1. Upgrade unsupported runtimes
 
-The API currently targets .NET 7 and its Dockerfile uses .NET 7 images. The UI
-Dockerfile uses Node 14. Both versions are end-of-life.
+**Status: Complete (2026-09-02).**
 
-Before public deployment:
+The applications previously used end-of-life .NET 7/.NET 6 and Node 14
+runtimes. They now use .NET 10 LTS and Node 24 LTS:
 
-- move API, Data, Logic, Core, Connector (while retained), and test projects to a
-  currently supported .NET LTS version;
-- update the SDK and ASP.NET runtime images in
-  `smart-home-api/SmartHome.Api/Dockerfile`;
-- update the frontend build runtime to a supported Node.js LTS version;
-- rebuild and run focused backend and frontend tests after the upgrade.
+- all API, Data, Logic, Core, Connector, and test projects target `net10.0`;
+- the .NET SDK and ASP.NET container images use version `10.0`;
+- the UI build image uses Node 24, `package.json` requires Node 24, and `.nvmrc`
+  selects Node 24;
+- direct framework and compatibility dependencies were upgraded for .NET 10,
+  including Entity Framework Core 10.0.11, Npgsql 10.0.3, AutoMapper 16.2.0,
+  and Newtonsoft.Json 13.0.4;
+- the UI container uses `npm ci` for reproducible lockfile-based installation.
+
+Verification completed:
+
+- .NET Release solution build: 0 warnings and 0 errors;
+- main backend tests: 31 passed;
+- the additional `SmartHome.Api.Tests` project: 1 passed;
+- NuGet vulnerability audit: no known vulnerable packages in the solution or
+  the additional test project;
+- frontend `svelte-check`: 0 errors (existing warnings and hints remain);
+- frontend TypeScript tests: 7 passed;
+- frontend production build completed;
+- individual API, Connector, and UI Docker images built successfully;
+- the API Compose service reached healthy status against local PostgreSQL, and
+  `GET /swagger/v1/swagger.json` returned `200 OK` after upgrading
+  Swashbuckle.AspNetCore to a .NET 10-compatible version.
+
+This verifies source builds, tests, and individual container packaging. It does
+not verify provider deployment, a complete browser flow, hardware, or iPhone
+delivery. The existing frontend dependency tree still reports npm audit findings
+and requires a separate dependency-modernization task; that does not change the
+supported Node runtime status.
 
 References:
 
@@ -137,6 +178,8 @@ References:
 - [Node.js supported releases](https://nodejs.org/en/about/previous-releases)
 
 ### 2. Remove secrets from source and rotate them
+
+**Status: Not started.**
 
 Do this before making the repository public or connecting it to a hosted build:
 
@@ -156,6 +199,8 @@ knows it can publish or subscribe. The current iPhone subscription can remain,
 but the topic must be stored only as a Render secret.
 
 ### 3. Add an authenticated ingestion endpoint
+
+**Status: Not started.**
 
 Add an API endpoint such as:
 
@@ -196,6 +241,8 @@ long random `INGEST_API_KEY` and support key rotation.
 
 ### 4. Make webhook delivery idempotent
 
+**Status: Not started.**
+
 EMQX must retry temporary API failures and Render cold starts. A retry must not
 create a second database point or a second notification.
 
@@ -215,6 +262,8 @@ Expected responses:
 | Temporary database or application failure | `5xx` so EMQX can retry |
 
 ### 5. Move scenario evaluation into the ingestion flow
+
+**Status: Not started.**
 
 Extract the scenario transition logic from `ScenarioWorker` into a scoped
 service that can evaluate scenarios for one sensor and one newly stored Point.
@@ -241,6 +290,8 @@ an outbox and delivery identifier; that is optional for this prototype.
 
 ### 6. Replace Connector-to-SignalR forwarding
 
+**Status: Not started.**
+
 The Connector currently calls the SignalR hub as a client after saving a Point.
 After the API owns ingestion, inject `IHubContext<SensorsHub>` and broadcast the
 saved DTO directly from the API process.
@@ -255,6 +306,8 @@ After this path is verified:
 
 ### 7. Add API health and readiness endpoints
 
+**Status: Not started.**
+
 Add endpoints suitable for Render monitoring:
 
 ```text
@@ -265,6 +318,8 @@ GET /health/ready  process can reach PostgreSQL and startup migrations succeeded
 Health responses must not reveal configuration, credentials, or provider URLs.
 
 ### 8. Configure frontend URLs for production
+
+**Status: Not started.**
 
 The current frontend contains two localhost assumptions:
 
@@ -286,6 +341,8 @@ Add Svelte SPA fallback routing so refreshing a client route serves
 
 ### 9. Restrict CORS
 
+**Status: Not started.**
+
 `Startup.cs` currently allows every origin, method, and header. Replace that
 policy with the exact Cloudflare Pages production origin and any explicitly
 required preview origin.
@@ -294,6 +351,8 @@ Keep local development origins in development-only configuration. Verify both
 normal API calls and the SignalR WebSocket handshake after tightening CORS.
 
 ### 10. Add database retention and export
+
+**Status: Not started.**
 
 At the current 20-second interval, raw history grows by about 129,600 rows per
 month. The exact storage consumption depends on row and index sizes, so measure

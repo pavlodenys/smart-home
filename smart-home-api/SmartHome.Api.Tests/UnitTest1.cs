@@ -1,16 +1,15 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace SmartHome.Api.Tests
 {
-    public class Tests
+    public class SwaggerStartupTests
     {
-        [SetUp]
-        public void Setup()
-        {
-        }
-
         [Test]
-        public void Test1()
+        public void Swagger_services_can_be_registered()
         {
-            Assert.Pass();
+            var services = new ServiceCollection();
+
+            Assert.DoesNotThrow(() => services.AddSwaggerGen());
         }
     }
 }

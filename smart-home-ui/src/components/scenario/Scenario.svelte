@@ -22,7 +22,7 @@
   let hysteresis = 2;
   let command = "Plant moisture is {value}%, below {threshold}%";
   let selectedOperator = ComparisonOperator.LessThan;
-  let actionType = ScenarioActionType.Notification;
+  let actionType: number = ScenarioActionType.Notification;
   let scenarios: ScenarioData[] = [];
   let errorMessage = "";
   let isSaving = false;

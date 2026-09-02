@@ -7,7 +7,6 @@ namespace SmatHome.Connector
 {
     class Program
     {
-        private const int MAX_ATTEMPTS = 5;
         private const int InitialDelayMilliseconds = 1000;
         private const int MaxDelayMilliseconds = 5000;
 
@@ -32,33 +31,44 @@ namespace SmatHome.Connector
             configuration.GetSection("SignalR").Bind(signalR);
             Console.WriteLine(" [*] Start listening...");
 
-            int attempts = 0;
+            connection = new HubConnectionBuilder()
+                .WithUrl(signalR.HubUrl)
+                .WithAutomaticReconnect(new SignalRRetryPolicy())
+                .Build();
+
+            connection.Reconnecting += error =>
+            {
+                Console.WriteLine($" [!] SignalR reconnecting: {error?.Message}");
+                return Task.CompletedTask;
+            };
+            connection.Reconnected += connectionId =>
+            {
+                Console.WriteLine($" [*] SignalR reconnected. ConnectionId = {connectionId}");
+                return Task.CompletedTask;
+            };
+
             var delayMilliseconds = InitialDelayMilliseconds;
 
-            while (attempts < MAX_ATTEMPTS)
+            while (connection.State == HubConnectionState.Disconnected)
             {
                 try
                 {
-                    connection = new HubConnectionBuilder().WithUrl(signalR.HubUrl).Build();
                     await connection.StartAsync();
                     break;
                 }
                 catch (HttpRequestException e)
                 {
                     Console.WriteLine($"{e.Message}");
-                    Console.WriteLine($"Attempt {attempts + 1} of {MAX_ATTEMPTS}");
+                    Console.WriteLine($"Retrying the initial SignalR connection in {delayMilliseconds} ms");
 
                     await Task.Delay(delayMilliseconds);
                     delayMilliseconds = Math.Min(delayMilliseconds * 2, MaxDelayMilliseconds);
-
-                    attempts++;
                 }
             }
 
-            if (connection is null)
+            if (connection.State != HubConnectionState.Connected)
             {
                 Console.WriteLine($"Could not establish connection");
-                Console.ReadKey();
                 return;
             }
 

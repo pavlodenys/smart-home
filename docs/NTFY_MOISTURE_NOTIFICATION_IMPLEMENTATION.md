@@ -410,7 +410,7 @@ Run the backend test project in an SDK container so the host does not need the
 docker run --rm `
   -v "${PWD}/smart-home-api:/src" `
   -w /src `
-  mcr.microsoft.com/dotnet/sdk:7.0 `
+  mcr.microsoft.com/dotnet/sdk:10.0 `
   dotnet test SmartHome.Tests/SmartHome.Tests.csproj
 ```
 
@@ -421,7 +421,7 @@ project directory:
 docker run --rm `
   -v "${PWD}/smart-home-ui:/app" `
   -w /app `
-  node:14 `
+  node:24 `
   sh -c "npm ci && npm run check && npm run build"
 ```
 

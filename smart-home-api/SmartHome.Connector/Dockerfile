@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build-connector
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-connector
 WORKDIR /src
 COPY ["SmartHome.Connector/SmartHome.Connector.csproj", "SmartHome.Connector/"]
 COPY ["SmartHome.Data/SmartHome.Data.csproj", "SmartHome.Data/"]
@@ -11,7 +11,7 @@ WORKDIR "/src/SmartHome.Connector"
 RUN dotnet publish -c Release -o /app
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build-connector /app .
 ENTRYPOINT ["dotnet", "SmartHome.Connector.dll"]

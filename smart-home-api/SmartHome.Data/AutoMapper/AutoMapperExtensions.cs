@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Logging.Abstractions;
 using SmartHome.Data.DTO;
 using SmartHome.Data.Entities;
 
@@ -12,11 +13,12 @@ namespace SmartHome.Data.AutoMapper
         {
             // Access the AutoMapper configuration from the other project
             var configuration = new MapperConfiguration(cfg =>
-            {
-                cfg.CreateMap<Point, PointDto>();
-                cfg.CreateMap<PointDto, Point>();
-                // Add any other profiles or custom mappings you have in the other project
-            });
+                {
+                    cfg.CreateMap<Point, PointDto>();
+                    cfg.CreateMap<PointDto, Point>();
+                    // Add any other profiles or custom mappings you have in the other project
+                },
+                NullLoggerFactory.Instance);
 
             // Build and return the IMapper instance
             return configuration.CreateMapper();

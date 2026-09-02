@@ -243,7 +243,7 @@
     const gBrush = svg.append("g").attr("class", "brush").call(brush);
 
     datePicker.on("change", async (e) => {
-      const newDate = datePicker.node().value;
+      const newDate = (datePicker.node() as HTMLInputElement).value;
       selectedDate = newDate;
       const filteredPoints = await filterPoints(
         allPoints,

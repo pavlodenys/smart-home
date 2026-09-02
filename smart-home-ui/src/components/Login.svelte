@@ -9,6 +9,9 @@
   let emailInvalid = false;
   let passwordInvalid = false;
 
+  const readTrimmedInput = (event: Event) =>
+    (event.currentTarget as HTMLInputElement).value.trim();
+
   async function login() {
     if (!email.trim()) {
       emailInvalid = true;
@@ -46,7 +49,7 @@
       <input
         type="text"
         bind:value={email}
-        on:input={(e) => (email = e.target.value.trim())}
+        on:input={(e) => (email = readTrimmedInput(e))}
         class:invalid={emailInvalid}
         required
       />
@@ -59,7 +62,7 @@
       <input
         type="password"
         bind:value={password}
-        on:input={(e) => (password = e.target.value.trim())}
+        on:input={(e) => (password = readTrimmedInput(e))}
         class:invalid={passwordInvalid}
         required
       />
