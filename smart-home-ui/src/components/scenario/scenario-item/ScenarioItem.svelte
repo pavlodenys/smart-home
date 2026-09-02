@@ -1,120 +1,82 @@
 <script lang="ts">
+  import { createEventDispatcher } from "svelte";
   import { httpFetch } from "../../../api/httpServise";
-  import { ComparisonOperator } from "../../../types";
+  import { ScenarioActionType, type ScenarioData } from "../../../types";
 
-  export let scenario;
-  function toggleDevice(device) {
-    device.device = { ...device.device, isActive: !device.device.isActive };
-    scenario = scenario;
-  }
+  export let scenario: ScenarioData;
 
-  const removeScenario = async (id) => {
-    const remove = await httpFetch.delete(`api/scenario/${id}`);
+  const dispatch = createEventDispatcher<{ deleted: { id: number } }>();
+  let deleteError = "";
 
-    console.log(remove);
-  };
+  const operatorNames = [
+    "greater than",
+    "less than",
+    "equal to",
+    "not equal to",
+    "greater than or equal to",
+    "less than or equal to",
+  ];
 
-  const mapOperator = (key) => {
-    switch (key) {
-      case 0:
-        return "GreaterThan";
-        break;
-      case 1:
-        return "LessThan";
-        break;
-      case 2:
-        return "Equal";
-        break;
-      case 3:
-        return "NotEqual";
-        break;
-      case 4:
-        return "GreaterThanOrEqual";
-        break;
-      case 5:
-        return "LessThanOrEqual";
-        break;
-      default:
-        return "";
+  const removeScenario = async () => {
+    deleteError = "";
+    const response = await httpFetch.delete(`api/scenario/${scenario.id}`);
+    if (typeof response === "string" && response !== scenario.id.toString()) {
+      deleteError = response;
+      return;
     }
+
+    dispatch("deleted", { id: scenario.id });
   };
 </script>
 
-<div>
-  <h2>{scenario.command}</h2>
-  <div class="scenario-item">
-    {#each scenario.devices as device}
-      <div class="device-item">
-        <p>If</p>
+<article class="scenario-item">
+  <div>
+    <p>
+      If <strong>{scenario.sensors?.[0]?.sensor?.name ?? "sensor"}</strong> is
+      <strong>{operatorNames[scenario.operator] ?? "compared with"}</strong>
+      <strong>{scenario.threshold}</strong>
+    </p>
 
-        {#each scenario.sensors as sensor}
-          <p class="device-title">{sensor.sensor.name}</p>
-          <p>Value is</p>
-          <p class="device-title">{mapOperator(scenario.operator)}</p>
-          <p>then</p>
-          <p class="device-title">{scenario.value}</p>
-        {/each}
-        <p>then</p>
-        <p class="device-title">{device.device.description}</p>
-        <p>is</p>
-        <p class={device.device.isActive ? "btn-active" : "btn-inactive"}>
-          {device.device.isActive ? " Active " : " Disabled "}
-        </p>
-        <button
-          class="remove-b"
-          on:click={async () => await removeScenario(scenario.id)}
-        >
-          x
-        </button>
-        <!-- <button
-          on:click={() => toggleDevice(device)}
-          class={device.device.isActive ? "btn-active" : "btn-inactive"}
-        >
-          {device.device.isActive ? "Turn Off" : "Turn On"}
-        </button> -->
-      </div>
-    {/each}
+    {#if scenario.actionType === ScenarioActionType.Notification}
+      <p>Notify: <strong>{scenario.command}</strong></p>
+    {:else}
+      <p>
+        Toggle device:
+        <strong>{scenario.devices?.[0]?.device?.description ?? "device"}</strong>
+      </p>
+    {/if}
+
+    <p class="scenario-state">
+      {scenario.isConditionActive ? "Triggered, waiting for recovery" : "Armed"}
+    </p>
+
+    {#if deleteError}
+      <p class="error-message" role="alert">{deleteError}</p>
+    {/if}
   </div>
-</div>
+
+  <button class="remove-b" aria-label="Delete automation" on:click={removeScenario}>×</button>
+</article>
 
 <style>
   .remove-b {
-    margin-left: 0.25rem;
+    margin-left: 0.75rem;
   }
+
   .scenario-item {
-    text-align: center;
-    padding: 1rem;
+    align-items: flex-start;
     display: flex;
     justify-content: space-between;
+    padding: 1rem;
+    text-align: left;
   }
 
-  .device-item {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+  .scenario-item p {
+    margin: 0 0 0.5rem;
   }
 
-  .device-title {
-    font-weight: bold;
-    border: 1px solid black;
-    background-color: rgba(151, 190, 150, 0.822);
-    border-radius: 0.5rem;
-    padding: 0.25rem;
-    margin: 0.25rem;
-  }
-
-  .btn-active {
-    background-color: green;
-    color: white;
-  }
-
-  .btn-inactive {
-    background-color: red;
-    color: white;
-  }
-
-  /* Add space between elements */
-  h2 {
-    margin-bottom: 1rem;
+  .scenario-state {
+    color: #52606d;
+    font-size: 0.875rem;
   }
 </style>

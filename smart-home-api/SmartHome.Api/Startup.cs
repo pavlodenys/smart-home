@@ -10,6 +10,7 @@ using SmartHome.Api.Utilities;
 using SmartHome.Api.Hubs;
 using System.Diagnostics;
 using SmartHome.Api.Worker;
+using SmartHome.Api.Notifications;
 
 namespace SmartHome.Api
 {
@@ -31,7 +32,7 @@ namespace SmartHome.Api
             //services.AddDbContext<SmartHomeDbContext>(options => options
             //        .UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddTransient(_ => new SmartHomeDbContext(
+            services.AddScoped(_ => new SmartHomeDbContext(
                 Configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.")));
 
@@ -48,16 +49,23 @@ namespace SmartHome.Api
                 var repositoryType = typeof(Repository<,>).MakeGenericType(entityClass, typeDto);
                 var repositoryInterface = typeof(IRepository<,>).MakeGenericType(entityClass,typeDto);
 
-                services.AddTransient(repositoryInterface, repositoryType);
+                services.AddScoped(repositoryInterface, repositoryType);
             }
 
-            services.AddSingleton<ScenarioService>();
-            services.AddSingleton<Services>();
+            services.AddScoped<ScenarioService>();
+            services.AddScoped<Services>();
 
-            services.AddSingleton<ScenariosQueue>();
+            services.AddOptions<NtfyOptions>()
+                .Bind(Configuration.GetSection(NtfyOptions.SectionName))
+                .Validate(NtfyOptions.IsValid, "Enabled ntfy configuration requires an HTTPS base URL and a valid topic.")
+                .ValidateOnStart();
 
-            services.AddHostedService<ScenarioConsumer>();
-            services.AddHostedService<ScenarioProducer>();
+            services.AddHttpClient<INotificationSender, NtfyNotificationSender>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
+
+            services.AddHostedService<ScenarioWorker>();
 
             services.AddAutoMapper(typeof(AutoMapperProfile));
 
@@ -128,7 +136,7 @@ namespace SmartHome.Api
                     policy.RequireRole("Admin"));
             });//todo: check
 
-            services.AddSingleton<IService, Services>();
+            services.AddScoped<IService, Services>();
 
             services.AddControllers().AddJsonOptions(options =>
             {

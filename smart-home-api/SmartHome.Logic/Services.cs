@@ -38,29 +38,8 @@ namespace SmartHome.Logic
             if (device == null || sensorData == null)
                 return false;
 
-            var deviceStatusChanged = false;
-
-            switch (op)
-            {
-                case ComparisonOperator.GreaterThan:
-                    deviceStatusChanged = sensorData.Any(x => x.Value > value);
-                    break;
-                case ComparisonOperator.LessThan:
-                    deviceStatusChanged = sensorData.Any(x => x.Value < value);
-                    break;
-                case ComparisonOperator.Equal:
-                    deviceStatusChanged = sensorData.Any(x => x.Value == value);
-                    break;
-                case ComparisonOperator.NotEqual:
-                    deviceStatusChanged = sensorData.Any(x => x.Value != value);
-                    break;
-                case ComparisonOperator.GreaterThanOrEqual:
-                    deviceStatusChanged = sensorData.Any(x => x.Value >= value);
-                    break;
-                case ComparisonOperator.LessThanOrEqual:
-                    deviceStatusChanged = sensorData.Any(x => x.Value <= value);
-                    break;
-            }
+            var deviceStatusChanged = sensorData.Any(point =>
+                ScenarioConditionEvaluator.IsMatch(op, point.Value, value));
 
             if (deviceStatusChanged)
                 return await ChangeStatus(device.Id);

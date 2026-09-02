@@ -88,3 +88,43 @@
   flex-direction: column;
   align-items: center;
 }
+
+.scenario-heading {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.scenario-heading p,
+.empty-state,
+.field-help {
+  color: #52606d;
+}
+
+.scenario-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+}
+
+.scenario-list li {
+  border-top: 1px solid #d9e2ec;
+}
+
+.field-help {
+  font-size: 0.875rem;
+  margin: 0 0 0.75rem;
+}
+
+.error-message {
+  color: #b42318;
+  margin: 0.5rem 0;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}

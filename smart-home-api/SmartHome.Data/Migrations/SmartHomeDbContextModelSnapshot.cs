@@ -212,17 +212,26 @@ namespace SmartHome.Data.Migrations
                     b.Property<string>("Command")
                         .HasColumnType("text");
 
+                    b.Property<int>("ActionType")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("Hysteresis")
+                        .HasColumnType("double precision");
+
+                    b.Property<bool>("IsConditionActive")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastTriggeredAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Operator")
                         .HasColumnType("integer");
 
-                    b.Property<int>("SensorValue")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Value")
-                        .HasColumnType("integer");
+                    b.Property<double>("Threshold")
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 

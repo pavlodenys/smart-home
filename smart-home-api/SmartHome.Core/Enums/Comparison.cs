@@ -15,4 +15,10 @@ namespace SmartHome.Core.Enums
         GreaterThanOrEqual,
         LessThanOrEqual
     }
+
+    public enum ScenarioActionType
+    {
+        Device,
+        Notification
+    }
 }
