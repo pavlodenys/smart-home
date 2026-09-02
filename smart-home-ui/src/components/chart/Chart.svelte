@@ -83,7 +83,15 @@
 
   onMount(async () => {
     await tick();
-    allPoints = chart.data;
+    allPoints = chart.data ?? [];
+    if (allPoints.length) {
+      const latestPoint = allPoints.reduce((latest: any, point: any) =>
+        new Date(point.dateTime).getTime() > new Date(latest.dateTime).getTime()
+          ? point
+          : latest
+      );
+      selectedDate = moment(latestPoint.dateTime).format("YYYY-MM-DD");
+    }
 
     connection.start().catch((err) => console.error(err));
 

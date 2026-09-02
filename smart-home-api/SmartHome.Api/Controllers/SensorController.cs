@@ -70,6 +70,38 @@ namespace SmartHome.Api.Controllers
         }
 
         [HttpGet]
+        [Route("{id}/latest")]
+        public async Task<IActionResult> GetLatestSensorDetails(int id)
+        {
+            var sensor = await _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
+
+            if (sensor == null)
+            {
+                return NotFound();
+            }
+
+            var latestPoint = sensor.ChartData
+                .SelectMany(data => data.Data ?? Enumerable.Empty<PointDto>())
+                .OrderByDescending(point => point.DateTime)
+                .FirstOrDefault();
+
+            if (latestPoint == null)
+            {
+                return Ok(sensor);
+            }
+
+            var filterDate = latestPoint.DateTime.Date;
+            var nextDay = filterDate.AddDays(1);
+            foreach (var data in sensor.ChartData)
+            {
+                data.Data = data.Data?.Where(point =>
+                    point.DateTime >= filterDate && point.DateTime < nextDay).ToArray();
+            }
+
+            return Ok(sensor);
+        }
+
+        [HttpGet]
         [Route("{id}/data/{page}/{count}")]
         //[Authorize]
         public async Task<IActionResult> GetSensorData(int id, int page, int count)

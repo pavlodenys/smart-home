@@ -36,8 +36,7 @@
 
   onMount(async () => {
     if (params?.id) {
-      let date = moment().format("YYYY-MM-DD");
-      sensor = await httpFetch.get(`api/sensor/${params.id}/${date}`);
+      sensor = await httpFetch.get(`api/sensor/${params.id}/latest`);
     } else {
       sensor = {
         //id: "",
@@ -48,14 +47,14 @@
       };
     }
   });
-        if (!window.confirm(`Delete MQTT data source ${index} and its readings? This cannot be undone. Update and reflash any device publishing with Id=${index} before it publishes again.`)) return;
+
   const updateChartData = async (e) => {
     const result = await httpFetch.get(
       `api/sensor/${e.detail.dataId}/data/${e.detail.page}/${count}`
     );
 
     if (!Array.isArray(result) || !result.length) {
-      return;
+      if (!window.confirm(`Delete MQTT data source ${index} and its readings? This cannot be undone. Update and reflash any device publishing with Id=${index} before it publishes again.`)) return;
     }
 
     // reassign sensor (rather than mutating in place) so Svelte propagates the new points to Chart
