@@ -1,23 +1,15 @@
 /* Scenario.scss */
 
-.select {
-  margin-top: 8px;
-  margin-bottom: 16px;
-  width: 100%;
-  padding: 8px;
-  font-size: 16px;
-  border: none;
-  border-radius: 4px;
-}
-
+.select,
 .input {
-  margin-top: 8px;
-  margin-bottom: 16px;
+  margin: 0 0 0.85rem;
   width: 100%;
-  padding: 8px;
-  font-size: 16px;
-  border: none;
-  border-radius: 4px;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd9cf;
+  border-radius: 8px;
+  color: var(--ink);
+  background: #fff;
 }
 
 .button {
@@ -38,10 +30,9 @@
 }
 
 .title {
-  margin-top: 16px;
-  margin-bottom: 8px;
-  font-size: 16px;
-  font-weight: bold;
+  margin: 0.35rem 0 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .modal-overlay {
@@ -86,7 +77,8 @@
 .sensor-device-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  text-align: left;
 }
 
 .scenario-heading {
