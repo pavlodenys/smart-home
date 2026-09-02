@@ -2,6 +2,9 @@ export type ChartPointDate = {
   dateTime: string | Date;
 };
 
+export const getSensorDetailsUrl = (sensorId: number, date: string): string =>
+  `api/sensor/${sensorId}/${date}`;
+
 export const getFirstPoint = (points: ChartPointDate[]): Date => {
   if (points && points.length) {
     if (points.length > 30) {

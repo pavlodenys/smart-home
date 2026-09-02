@@ -1,7 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { getFirstPoint } from "../src/components/chart/chartDates.ts";
+import {
+  getFirstPoint,
+  getSensorDetailsUrl,
+} from "../src/components/chart/chartDates.ts";
+
+test("sensor detail requests use the sensor id, not the data-source id", () => {
+  assert.equal(
+    getSensorDetailsUrl(1, "2026-09-02"),
+    "api/sensor/1/2026-09-02",
+  );
+});
 
 test("getFirstPoint always returns a valid Date for a short realtime series", () => {
   const result = getFirstPoint([{ dateTime: "2026-08-15T15:30:02" }]);

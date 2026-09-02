@@ -55,6 +55,11 @@ namespace SmartHome.Api.Controllers
             var nextDay = filterDate.AddDays(1);
             var sensor = await _repo.GetById(b => b.Id == id, x => x.Include(y => y.Data).ThenInclude(z => z.Points));
 
+            if (sensor == null)
+            {
+                return NotFound();
+            }
+
             foreach (var data in sensor.ChartData)
             {
                 data.Data = data.Data?.Where(x => x.DateTime >= filterDate && x.DateTime < nextDay).ToArray();

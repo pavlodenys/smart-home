@@ -20,6 +20,7 @@
     filterPoints,
     updateDataChart,
     getFirstPoint,
+    getSensorDetailsUrl,
     crateZoom,
     syncTrackerToDomain,
   } from "./d3Utils";
@@ -28,6 +29,7 @@
 
   export let chart: ChartData;
   export let chartId;
+  export let sensorId: number | undefined;
 
   const connection = new signalR.HubConnectionBuilder()
     //.withUrl("https://localhost:7138/hub", {
@@ -56,7 +58,7 @@
 
     if (newPoints.length) {
       allPoints = [...allPoints, ...newPoints];
-      filterPoints(allPoints, selectedDate, chartId, chart.id).then((filtered) => {
+      filterPoints(allPoints, selectedDate, chartId, chart.id, sensorId).then((filtered) => {
         updateDataChart(
           chartId,
           filtered,
@@ -86,18 +88,24 @@
     // a dropped connection silently stops all future updates without this; on reconnect,
     // re-fetch the day so any points missed while disconnected get backfilled
     connection.onreconnected(async () => {
-      if (!svg) {
+      if (!svg || sensorId == null) {
         return;
       }
 
-      const sensor = await httpFetch.get(`api/sensor/${chart.id}/${selectedDate}`);
+      const sensor = await httpFetch.get(getSensorDetailsUrl(sensorId, selectedDate));
       const matchingChart = sensor?.chartData?.find((c) => c.id === chart.id);
       const existingIds = new Set(allPoints.map((p: any) => p.id));
       const newPoints = (matchingChart?.data ?? []).filter((p: any) => !existingIds.has(p.id));
 
       if (newPoints.length) {
         allPoints = [...allPoints, ...newPoints];
-        const filteredPoints = await filterPoints(allPoints, selectedDate, chartId, chart.id);
+        const filteredPoints = await filterPoints(
+          allPoints,
+          selectedDate,
+          chartId,
+          chart.id,
+          sensorId
+        );
         updateDataChart(
           chartId,
           filteredPoints,
@@ -127,7 +135,8 @@
           allPoints,
           selectedDate,
           chartId,
-          chart.id
+          chart.id,
+          sensorId
         );
 
         updateDataChart(
@@ -161,7 +170,8 @@
       allPoints,
       selectedDate,
       chartId,
-      chart.id
+      chart.id,
+      sensorId
     );
 
     // if (!points || !points.length) {
@@ -249,7 +259,8 @@
         allPoints,
         newDate,
         chartId,
-        chart.id
+        chart.id,
+        sensorId
       );
 
       if (!filteredPoints || !filteredPoints.length) {

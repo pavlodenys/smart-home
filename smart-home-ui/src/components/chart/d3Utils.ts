@@ -3,9 +3,9 @@ import type { PointDto } from "../../types";
 import * as d3 from "d3";
 import moment from "moment";
 import { httpFetch } from "../../api/httpServise";
-import { getFirstPoint } from "./chartDates";
+import { getFirstPoint, getSensorDetailsUrl } from "./chartDates";
 
-export { getFirstPoint } from "./chartDates";
+export { getFirstPoint, getSensorDetailsUrl } from "./chartDates";
 
 let timeoutId;
 
@@ -207,16 +207,16 @@ export const createDragger = (
     return drag;
 };
 
-export const filterPoints = async (points, date, chartId, chartIndex) => {
+export const filterPoints = async (points, date, chartId, dataId, sensorId) => {
     let filtered = (points ?? []).filter((point) => {
         const pointDate = new Date(point.dateTime);
         return moment(pointDate).format("YYYY-MM-DD") === date;
     });
 
-    if (!filtered.length) {
-        const sensor = await httpFetch.get(`api/sensor/${chartIndex}/${date}`);
+    if (!filtered.length && sensorId != null) {
+        const sensor = await httpFetch.get(getSensorDetailsUrl(sensorId, date));
         // match by data source id rather than array position, since the response order isn't guaranteed
-        const matchingChart = sensor?.chartData?.find((c) => c.id === chartIndex) ?? sensor?.chartData?.[chartId];
+        const matchingChart = sensor?.chartData?.find((c) => c.id === dataId) ?? sensor?.chartData?.[chartId];
         filtered = matchingChart?.data ?? [];
     }
 

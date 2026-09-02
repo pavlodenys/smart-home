@@ -207,7 +207,12 @@
               deleteData(data.id);
             }}>Delete {index}</button
           >
-          <Chart chart={data} chartId={index} on:chartEvent={updateChartData} />
+          <Chart
+            chart={data}
+            chartId={index}
+            sensorId={sensor.id}
+            on:chartEvent={updateChartData}
+          />
         </div>
       {/each}
     {:else}
