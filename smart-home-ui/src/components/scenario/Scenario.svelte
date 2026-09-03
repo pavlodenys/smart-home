@@ -26,6 +26,7 @@
   let scenarios: ScenarioData[] = [];
   let errorMessage = "";
   let isSaving = false;
+  let editingScenarioId: number | null = null;
 
   const operators = ComparisonOperator;
   const actionTypes = ScenarioActionType;
@@ -40,6 +41,7 @@
   };
 
   const openModal = () => {
+    editingScenarioId = null;
     selectedSensor ??= sensors[0]?.id;
     selectedDevice ??= devices[0]?.id;
     errorMessage = "";
@@ -80,9 +82,8 @@
 
     isSaving = true;
     try {
-      const response = await httpFetch.post(
-        "api/scenario",
-        buildScenarioPayload({
+      const payload = {
+        ...buildScenarioPayload({
           selectedSensor,
           selectedDevice,
           threshold,
@@ -91,7 +92,11 @@
           actionType,
           command,
         }),
-      );
+        ...(editingScenarioId === null ? {} : { id: editingScenarioId }),
+      };
+      const response = editingScenarioId === null
+        ? await httpFetch.post("api/scenario", payload)
+        : await httpFetch.put("api/scenario", payload);
 
       if (typeof response === "string") {
         throw new Error(response);
@@ -108,6 +113,20 @@
 
   const removeScenario = (event: CustomEvent<{ id: number }>) => {
     scenarios = scenarios.filter((scenario) => scenario.id !== event.detail.id);
+  };
+
+  const editScenario = (event: CustomEvent<{ scenario: ScenarioData }>) => {
+    const scenario = event.detail.scenario;
+    editingScenarioId = scenario.id;
+    selectedSensor = scenario.sensors?.[scenario.sensors.length - 1]?.sensorId;
+    selectedDevice = scenario.devices?.[scenario.devices.length - 1]?.deviceId;
+    threshold = scenario.threshold;
+    hysteresis = scenario.hysteresis;
+    selectedOperator = scenario.operator;
+    actionType = scenario.actionType;
+    command = scenario.command ?? "";
+    errorMessage = "";
+    showModal = true;
   };
 
   onMount(() => {
@@ -142,7 +161,7 @@
     <ul class="scenario-list">
       {#each scenarios as scenario (scenario.id)}
         <li>
-          <ScenarioItem {scenario} on:deleted={removeScenario} />
+          <ScenarioItem {scenario} on:deleted={removeScenario} on:edit={editScenario} />
         </li>
       {/each}
     </ul>
@@ -153,8 +172,9 @@
   show={showModal}
   {closeModal}
   ok={saveScenario}
-  title="Create automation"
+  title={editingScenarioId === null ? "Create automation" : "Edit automation"}
   titleClass="modal-title"
+  okLabel={editingScenarioId === null ? "Create automation" : "Save changes"}
 >
   <div class="sensor-device-container">
     <label class="title" for="scenario-sensor">Sensor</label>

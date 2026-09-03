@@ -5,7 +5,10 @@
 
   export let scenario: ScenarioData;
 
-  const dispatch = createEventDispatcher<{ deleted: { id: number } }>();
+  const dispatch = createEventDispatcher<{
+    deleted: { id: number };
+    edit: { scenario: ScenarioData };
+  }>();
   let deleteError = "";
 
   const operatorNames = [
@@ -55,12 +58,22 @@
     {/if}
   </div>
 
-  <button class="remove-b" aria-label="Delete automation" on:click={removeScenario}>×</button>
+  <div class="scenario-actions">
+    <button type="button" class="edit-b" on:click={() => dispatch("edit", { scenario })}>Edit</button>
+    <button class="remove-b" aria-label="Delete automation" on:click={removeScenario}>×</button>
+  </div>
 </article>
 
 <style>
+  .scenario-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .edit-b,
   .remove-b {
-    margin-left: 0.75rem;
+    min-height: 38px;
+    padding: 0.45rem 0.7rem;
   }
 
   .scenario-item {
