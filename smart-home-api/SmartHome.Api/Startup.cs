@@ -5,12 +5,14 @@ using SmartHome.Data.Entities;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using SmartHome.Api.Utilities;
 using SmartHome.Api.Hubs;
 using System.Diagnostics;
 using SmartHome.Api.Worker;
 using SmartHome.Api.Notifications;
+using SmartHome.Api.Ingestion;
 
 namespace SmartHome.Api
 {
@@ -54,6 +56,15 @@ namespace SmartHome.Api
 
             services.AddScoped<ScenarioService>();
             services.AddScoped<Services>();
+
+            services.AddOptions<IngestionOptions>()
+                .Bind(Configuration.GetSection(IngestionOptions.SectionName))
+                .Validate(
+                    IngestionOptions.IsValid,
+                    "Ingestion requires at least one API key of 32 bytes or more and valid reading bounds.")
+                .ValidateOnStart();
+            services.AddSingleton<IIngestionApiKeyValidator, IngestionApiKeyValidator>();
+            services.AddSingleton(TimeProvider.System);
 
             services.AddOptions<NtfyOptions>()
                 .Bind(Configuration.GetSection(NtfyOptions.SectionName))
@@ -134,7 +145,10 @@ namespace SmartHome.Api
                     //        return Task.CompletedTask;
                     //    }
                     //};
-                });
+                })
+                .AddScheme<AuthenticationSchemeOptions, IngestionApiKeyHandler>(
+                    IngestionAuthenticationDefaults.AuthenticationScheme,
+                    _ => { });
 
             services.AddAuthorization(options =>
             {

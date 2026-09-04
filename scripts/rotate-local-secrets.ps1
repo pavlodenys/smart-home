@@ -10,7 +10,12 @@ $envPath = Join-Path $repositoryRoot '.env'
 
 function New-RandomSecret([int]$ByteCount = 48) {
     $bytes = [byte[]]::new($ByteCount)
-    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    try {
+        $rng.GetBytes($bytes)
+    } finally {
+        $rng.Dispose()
+    }
     return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
 }
 
@@ -99,6 +104,7 @@ if ($SyncFirmwareOnly) {
 $postgresPassword = New-RandomSecret
 $rabbitPassword = New-RandomSecret
 $jwtKey = New-RandomSecret 64
+$ingestApiKey = New-RandomSecret
 $postgresUser = 'smarthome'
 $postgresDatabase = 'SmartHouse'
 $rabbitUser = 'rmuser'
@@ -129,6 +135,7 @@ $envContent = Set-DotEnvValue $envContent 'POSTGRES_PASSWORD' $postgresPassword
 $envContent = Set-DotEnvValue $envContent 'RABBITMQ_USERNAME' $rabbitUser
 $envContent = Set-DotEnvValue $envContent 'RABBITMQ_PASSWORD' $rabbitPassword
 $envContent = Set-DotEnvValue $envContent 'JWT_KEY' $jwtKey
+$envContent = Set-DotEnvValue $envContent 'INGEST_API_KEY' $ingestApiKey
 [System.IO.File]::WriteAllText($envPath, $envContent, [System.Text.UTF8Encoding]::new($false))
 Sync-FirmwareMqttCredentials $rabbitUser $rabbitPassword
 

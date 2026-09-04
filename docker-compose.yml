@@ -37,6 +37,7 @@ services:
       ASPNETCORE_URLS: http://+:80
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB:-SmartHouse};Username=${POSTGRES_USER:-smarthome};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env}
+      Ingestion__ApiKey: ${INGEST_API_KEY:?Set INGEST_API_KEY in .env}
       Notifications__Ntfy__Enabled: ${NTFY_ENABLED:-false}
       Notifications__Ntfy__BaseUrl: https://ntfy.sh
       Notifications__Ntfy__Topic: ${NTFY_TOPIC:-}

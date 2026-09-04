@@ -12,6 +12,27 @@ let timeoutId;
 export const formatDate = (d) => moment(d).format("YYYY-MM-DD HH:mm:ss");
 export const smallFormatDate = (d) => moment(d).format("HH:mm");
 
+// one <circle> DOM node per point (each with hover listeners) gets expensive well before a
+// line path does, so circles are rendered from an evenly-sampled subset while the line still
+// uses the full series; the most recent point is always kept so new readings show immediately
+export const decimatePoints = (points: any[], maxPoints: number) => {
+    if (!points || points.length <= maxPoints) {
+        return points ?? [];
+    }
+
+    const step = Math.ceil(points.length / maxPoints);
+    const sampled = points.filter((_, index) => index % step === 0);
+    const last = points[points.length - 1];
+    if (sampled[sampled.length - 1] !== last) {
+        sampled.push(last);
+    }
+
+    return sampled;
+};
+
+const MAX_RENDERED_CIRCLES = 300;
+const MAX_MINIMAP_LINE_POINTS = 400;
+
 export const createScales = (width, height, domainX, domainY) => {
     const x = d3.scaleTime().domain(domainX).range([0, width]);
     const y = d3.scaleLinear().domain(domainY).range([height, 0]);
@@ -33,7 +54,7 @@ export const createSVG = (selector, width, height, margin) => {
         .append("svg")
         .attr("viewBox", `0 0 ${width} ${height}`)
         .attr("width", "100%")
-        .attr("height", "auto")
+        .style("height", "auto")
         .attr("preserveAspectRatio", "xMidYMid meet")
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
@@ -51,7 +72,6 @@ export const createPath = (svgElement, points, valueline, margin) => {
     return svgElement
         .append("path")
         .datum(points)
-        .attr("transform", `translate(${margin.left}, 0)`)
         .attr("class", "line")
         .attr("d", valueline);
 };
@@ -90,7 +110,6 @@ export const createCircle = (chartId, svgElement, points, margin, x, y) => {
         .data(points)
         .enter()
         .append("circle")
-        .attr("transform", `translate(${margin.left}, 0)`)
         .attr("class", `dot-${chartId}`)
         .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
         .attr("cy", (d) => y(d.value))
@@ -283,14 +302,17 @@ export const updateDataChart = (
     const line = svg.select(".line");
     const miniline = svgMap.select(".line");
 
+    // the minimap is only a few hundred pixels wide, so a full-resolution series is wasted work
+    const miniData = decimatePoints(data, MAX_MINIMAP_LINE_POINTS);
+
     //console.log(miniline);
     if (line.size()) {
         line.datum(data);
-        miniline.data([data]);
+        miniline.data([miniData]);
     } else {
         const valueLine = createValueLine(x, y);
         const path = createPath(svg, data, valueLine, margin);
-        const minMapPath = createPath(svgMap, data, minimapLine, margin);
+        const minMapPath = createPath(svgMap, miniData, minimapLine, margin);
     }
 
     // Redraw the line with the new data and scales
@@ -312,14 +334,16 @@ export const updateDataChart = (
             .y((d: any) => miniy(d.value))
     );
 
-    // Select the circles and bind the new data to them
-    let circles = svg.selectAll(`.dot-${chartId}`).data(data);
+    // Select the circles and bind the new data to them. Rendering every point as its own DOM
+    // node (with hover listeners) gets expensive well past a few hundred points, so circles are
+    // drawn from a decimated subset while the line keeps full resolution. Keying by point id
+    // (instead of index) lets d3 recognize unchanged points instead of moving every circle on
+    // every update, and updating positions immediately (no transition) keeps circles in sync
+    // with the line, which is also redrawn immediately above.
+    const circleData = decimatePoints(data, MAX_RENDERED_CIRCLES);
+    let circles = svg.selectAll(`.dot-${chartId}`).data(circleData, (d: any) => d.id);
     if (circles.size()) {
-        //circles.data(data);
         circles
-            .transition()
-            .duration(1000)
-            .attr("transform", `translate(${margin.left}, 0)`)
             .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
             .attr("cy", (d) => y(d.value));
 
@@ -327,7 +351,6 @@ export const updateDataChart = (
             .enter()
             .append("circle")
             .attr("class", `dot-${chartId}`)
-            .attr("transform", `translate(${margin.left}, 0)`)
             .attr("cx", (d) => x(new Date(formatDate(d.dateTime))))
             .attr("cy", (d) => y(d.value))
             .attr("r", 5) // specify the radius or any other attributes for the new circles
@@ -336,7 +359,7 @@ export const updateDataChart = (
         // remove leftover dots from a smaller/older dataset
         circles.exit().remove();
     } else {
-        circles = createCircle(chartId, svg, data, margin, x, y);
+        circles = createCircle(chartId, svg, circleData, margin, x, y);
     }
 };
 

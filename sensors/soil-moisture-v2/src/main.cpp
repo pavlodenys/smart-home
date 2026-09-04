@@ -13,6 +13,7 @@ namespace
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 unsigned long lastPublishMs = 0;
+constexpr time_t MIN_VALID_UNIX_TIME = 1577836800; // 2020-01-01T00:00:00Z
 
 void configureOta()
 {
@@ -50,6 +51,20 @@ void connectWifi()
                   WiFi.localIP().toString().c_str());
 }
 
+void waitForTimeSync()
+{
+    Serial.print("Waiting for NTP time");
+    while (time(nullptr) < MIN_VALID_UNIX_TIME)
+    {
+        connectWifi();
+        ArduinoOTA.handle();
+        delay(250);
+        Serial.print('.');
+    }
+
+    Serial.println(" synchronized");
+}
+
 void connectMqtt()
 {
     while (!mqttClient.connected())
@@ -66,7 +81,13 @@ void connectMqtt()
 
         Serial.printf("MQTT connection failed, state=%d; retrying in 5s\n",
                       mqttClient.state());
-        delay(5000);
+
+        // keep servicing OTA requests while retries are blocked on a failing broker login
+        for (uint8_t i = 0; i < 20; ++i)
+        {
+            ArduinoOTA.handle();
+            delay(250);
+        }
     }
 }
 
@@ -122,6 +143,7 @@ void setup()
     connectWifi();
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
     configureOta();
+    waitForTimeSync();
 
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);
     mqttClient.setKeepAlive(30);

@@ -123,7 +123,7 @@ Status as of 2026-09-02:
 | --- | --- | --- |
 | 1 | Upgrade unsupported runtimes | **Complete** |
 | 2 | Remove secrets from source and rotate them | **Partially complete** — Wi-Fi rotation and device reflashing remain |
-| 3 | Add an authenticated ingestion endpoint | Not started |
+| 3 | Add an authenticated ingestion endpoint | **Complete** |
 | 4 | Make webhook delivery idempotent | Not started |
 | 5 | Move scenario evaluation into the ingestion flow | Not started |
 | 6 | Replace Connector-to-SignalR forwarding | Not started |
@@ -257,7 +257,7 @@ docker compose up -d --no-build --force-recreate postgres rabbitmq smart-home-ap
 
 ### 3. Add an authenticated ingestion endpoint
 
-**Status: Not started.**
+**Status: Complete (2026-09-03).**
 
 Add an API endpoint such as:
 
@@ -278,20 +278,38 @@ Keep the firmware's existing payload contract:
 }
 ```
 
-The endpoint must:
+The endpoint now:
 
-1. Compare the bearer value with a server-side secret using a constant-time
-   comparison.
+1. Uses a dedicated authentication scheme and compares SHA-256 hashes of the
+   presented and configured bearer values using a constant-time comparison.
+   `Ingestion:ApiKey` is the primary key; `Ingestion:ApiKeys` can hold
+   additional keys during rotation.
 2. Reject missing or invalid sensor/chart-data IDs.
 3. Reject non-finite or unreasonable values and malformed timestamps.
-4. Convert a valid Unix timestamp to UTC. For cloud ingestion, reject a missing
-   or implausible timestamp so retries can be deduplicated reliably; update the
-   firmware to wait for NTP before its first publish.
-5. Deduplicate retries before inserting a Point.
-6. Store the Point using the scoped `SmartHomeDbContext`.
-7. Evaluate only scenarios associated with the affected sensor.
-8. Broadcast the saved Point with `IHubContext<SensorsHub>`.
-9. Return `2xx` only after the reading is durably accepted.
+4. Converts a valid Unix timestamp to UTC and, by default, accepts readings no
+   more than one day old or five minutes in the future. These bounds and the
+   default maximum absolute value of 1,000,000 are configurable under
+   `Ingestion`.
+5. Stores the Point using the scoped `SmartHomeDbContext` and returns `200 OK`
+   only after `SaveChangesAsync` succeeds.
+
+The soil-moisture firmware now waits for a plausible NTP time before connecting
+to MQTT and sending its first reading, so it no longer publishes a zero
+timestamp during startup.
+
+Docker verification completed:
+
+- the Release backend build and all 53 backend tests passed, including focused
+  authentication, key-rotation, validation, UTC conversion, and persistence
+  tests;
+- the API Docker image built successfully;
+- the soil-moisture PlatformIO `nodemcuv2` firmware build completed
+  successfully.
+
+This is source, in-memory persistence-test, and container-build proof. A live
+PostgreSQL request and deployed EMQX/Render flow have not yet been tested.
+Retry deduplication, event-driven scenario evaluation, and direct SignalR
+broadcasting remain preparation tasks 4, 5, and 6 respectively.
 
 Do not reuse the user JWT fallback value for device ingestion. Use a separate,
 long random `INGEST_API_KEY` and support key rotation.

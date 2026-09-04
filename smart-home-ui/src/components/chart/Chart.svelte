@@ -23,6 +23,7 @@
     getSensorDetailsUrl,
     crateZoom,
     syncTrackerToDomain,
+    decimatePoints,
   } from "./d3Utils";
 
   //TODO: add real-time update
@@ -50,7 +51,7 @@
   // shared with the reactive block below so server-paged points can be merged in after mount
   let allPoints: any[] = [];
   let x, y, svg, svgMinimap, xAxisSvg, yAxisSvg, margin, minimapLine, minimapXScale, minimapYScale;
-  let tracker, trackerWidth, svgWidth;
+  let tracker, trackerWidth, svgWidth, minimapElementWidth;
 
   // merge newly fetched pages (loaded via panning) into the chart once mounted
   $: if (svg && chart?.data && chart.data !== allPoints) {
@@ -75,7 +76,7 @@
           minimapYScale
         );
         if (tracker) {
-          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, minimapElementWidth);
         }
       });
     }
@@ -131,7 +132,7 @@
           minimapYScale
         );
         if (tracker) {
-          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, minimapElementWidth);
         }
       }
     });
@@ -164,7 +165,7 @@
           minimapYScale
         );
         if (tracker) {
-          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+          syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, minimapElementWidth);
         }
       }
     });
@@ -228,9 +229,7 @@
     const yAxis = createAx(y, d3.axisLeft, 5);
 
     svgWidth = width + margin.left + margin.right + 20;
-    const svgHeigth = height + margin.top + margin.bottom + 10;
-
-    const svgMinimapHeigth = minimapHeight + margin.top + margin.bottom + 10;
+    const svgHeigth = height + margin.top + margin.bottom + 10;    const svgMinimapHeigth = minimapHeight + margin.top + margin.bottom + 10;
 
     const brush = d3
       .brush()
@@ -249,7 +248,7 @@
     );
     xAxisSvg = svg
       .append("g")
-      .attr("transform", `translate(${margin.left}, ${height})`)
+      .attr("transform", `translate(0, ${height})`)
       .call(xAxis);
 
     xAxisSvg
@@ -258,7 +257,6 @@
       .style("text-anchor", "end");
     yAxisSvg = svg
       .append("g")
-      .attr("transform", `translate(${margin.left}, 0)`)
       .call(yAxis);
 
     const gBrush = svg.append("g").attr("class", "brush").call(brush);
@@ -307,7 +305,7 @@
         minimapXScale,
         minimapYScale
       );
-      syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+      syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, minimapElementWidth);
     });
 
     svg
@@ -315,7 +313,7 @@
       .append("clipPath")
       .attr("id", "chart-area-clip")
       .append("rect")
-      .attr("x", 17)
+      .attr("x", 0)
       .attr("y", 0)
       .attr("width", width)
       .attr("height", height);
@@ -327,17 +325,23 @@
     const valueLine = createValueLine(x, y);
     minimapLine = createValueLine(minimapXScale, minimapYScale);
     const path = createPath(chartArea, points, valueLine, margin);
-    const miniMapPath = createPath(svgMinimap, points, minimapLine, margin);
+    // the minimap is only a few hundred pixels wide, and one DOM circle per point gets
+    // expensive well before a path does, so both use a decimated subset of large series
+    const miniMapPath = createPath(svgMinimap, decimatePoints(points, 400), minimapLine, margin);
 
-    const circle1 = createCircle(chartId, chartArea, points, margin, x, y);
+    const circle1 = createCircle(chartId, chartArea, decimatePoints(points, 300), margin, x, y);
+
+    // the tracker lives in the minimap's own coordinate space (already offset by margin.left via
+    // its parent g), so its usable width matches what the dragger clamps against, not the full svg width
+    minimapElementWidth = width + margin.right + 20;
 
     tracker = createTracker(
       svgMinimap,
       trackerWidth,
       trackerHeight,
-      svgWidth
+      minimapElementWidth
     );
-    syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, svgWidth);
+    syncTrackerToDomain(tracker, minimapXScale, x, trackerWidth, minimapElementWidth);
 
     const drag = createDragger(
       tracker,
